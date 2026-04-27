@@ -1,0 +1,92 @@
+{
+  "checkpoint": "cbm_model_joint/model_final.pkl",
+  "pretrained_dir": "cbm_model/cbm_v1_frozen_womd_42",
+  "num_scenarios": 50,
+  "mode": "joint",
+  "concept_metrics": {
+    "ego_speed": {
+      "type": "continuous",
+      "mae": 0.19833597540855408,
+      "r2": -0.9317222833633423,
+      "valid_pct": 100.0
+    },
+    "ego_acceleration": {
+      "type": "continuous",
+      "mae": 0.24939770996570587,
+      "r2": -10.779112815856934,
+      "valid_pct": 100.0
+    },
+    "dist_nearest_object": {
+      "type": "continuous",
+      "mae": 0.18414904177188873,
+      "r2": -0.82871413230896,
+      "valid_pct": 100.0
+    },
+    "num_objects_within_10m": {
+      "type": "continuous",
+      "mae": 0.6783618927001953,
+      "r2": -7.381402969360352,
+      "valid_pct": 100.0
+    },
+    "traffic_light_red": {
+      "type": "binary",
+      "accuracy": 0.5227941176470589,
+      "valid_pct": 68.0
+    },
+    "dist_to_traffic_light": {
+      "type": "continuous",
+      "mae": 0.292095810174942,
+      "r2": -0.4367915391921997,
+      "valid_pct": 68.0
+    },
+    "heading_deviation": {
+      "type": "continuous",
+      "mae": 0.4252305328845978,
+      "r2": -4.085445880889893,
+      "valid_pct": 100.0
+    },
+    "progress_along_route": {
+      "type": "continuous",
+      "mae": 0.00955515168607235,
+      "r2": -0.010694146156311035,
+      "valid_pct": 100.0
+    },
+    "ttc_lead_vehicle": {
+      "type": "continuous",
+      "mae": 0.30778759717941284,
+      "r2": -0.6570252180099487,
+      "valid_pct": 33.300000000000004
+    },
+    "lead_vehicle_decelerating": {
+      "type": "binary",
+      "accuracy": 0.9954614220877458,
+      "valid_pct": 33.050000000000004
+    },
+    "at_intersection": {
+      "type": "binary",
+      "accuracy": 0.7654411764705882,
+      "valid_pct": 68.0
+    }
+  },
+  "task_metrics": {
+    "ep_return_mean": -30.940000534057617,
+    "ep_return_std": 25.37668800354004,
+    "accuracy": 0.22,
+    "at_fault_collision": 0.47999998927116394,
+    "comfort": 0.8799999952316284,
+    "driving_direction_compliance": 0.4363345801830292,
+    "log_divergence": 45.70132827758789,
+    "offroad": 0.6399999856948853,
+    "on_multiple_lanes": 0.6319980621337891,
+    "overlap": 0.46000000834465027,
+    "progress_ratio_nuplan": 0.5007879137992859,
+    "run_red_light": 0.019999999552965164,
+    "sdc_off_route": 13.295266151428223,
+    "sdc_progression": 1.1420693397521973,
+    "sdc_wrongway": 12.913304328918457,
+    "speed_limit": 0.0,
+    "ttc": 5.0
+  },
+  "baseline_accuracy": null,
+  "baseline_name": "cbm_v1_frozen_womd_42"
+}

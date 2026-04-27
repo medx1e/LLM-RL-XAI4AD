@@ -1,0 +1,100 @@
+# CBM Scratch SHORT RUN — local smoke test (no pretrained encoder, 15 concepts)
+# Memory-safe settings for GTX 1660 Ti (6GB). Verifies the full scratch pipeline
+# end-to-end: concept phases 1+2+3, diagnostic metrics, per-concept logging.
+# Run time: ~5-10 minutes locally.
+
+data_path:      "data/training.tfrecord"
+output_dir:     "runs_cbm"
+run_name:       "cbm_scratch_short_verify"
+
+mode:           "scratch"
+num_concepts:   15
+concept_phases: [1, 2, 3]
+lambda_concept: 0.1
+
+network_config:
+  encoder:
+    type: lq
+    embedding_layer_sizes: [256, 256]
+    embedding_activation: relu
+    encoder_depth: 4
+    dk: 64
+    num_latents: 16
+    latent_num_heads: 2
+    latent_head_features: 16
+    cross_num_heads: 2
+    cross_head_features: 16
+    ff_mult: 2
+    attn_dropout: 0.0
+    ff_dropout: 0.0
+    tie_layer_weights: true
+  policy:
+    type: mlp
+    layer_sizes: [256, 64, 32]
+    activation: relu
+    final_activation: null
+  value:
+    type: mlp
+    layer_sizes: [256, 64, 32]
+    activation: relu
+    final_activation: relu
+    num_networks: 2
+    shared_encoder: false
+  action_distribution: gaussian
+  _obs_type: vec
+
+observation_config:
+  obs_past_num_steps: 5
+  objects:
+    features: [waypoints, velocity, yaw, size, valid]
+    num_closest_objects: 8
+  roadgraphs:
+    features: [waypoints, direction, valid]
+    interval: 2
+    max_meters: 70
+    roadgraph_top_k: 200
+    meters_box:
+      front: 70
+      back: 5
+      left: 20
+      right: 20
+    max_num_lanes: 10
+    max_num_points_per_lane: 20
+  traffic_lights:
+    features: [waypoints, state, valid]
+    num_closest_traffic_lights: 5
+  path_target:
+    features: [waypoints]
+    num_points: 10
+    points_gap: 5
+
+termination_keys: [offroad, overlap, run_red_light]
+reward_type: linear
+reward_config:
+  overlap:   -1.0
+  offroad:   -1.0
+  red_light: -1.0
+  off_route: -0.6
+  progression: 0.2
+
+num_parallel_envs:    1
+num_episodes_per_env: 1    # minimal parallelism for local VRAM
+
+scan_length:       10      # short scan for quick iterations
+scenario_length:   80
+unroll_length:      1
+total_timesteps:  500      # ~50 iters, enough to see all metrics fire
+
+alpha:              0.2
+discount:           0.99
+tau:                0.005
+learning_rate:      0.0001
+batch_size:         32
+grad_updates_per_step: 2
+buffer_size:       10_000
+learning_start:     200
+
+log_freq:    1
+save_freq:   10
+seed:        42
+disable_tqdm: false

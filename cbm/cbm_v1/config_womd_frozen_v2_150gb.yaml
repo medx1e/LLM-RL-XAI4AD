@@ -1,0 +1,53 @@
+# CBM-V2 Frozen-Encoder Training Config — WOMD 150GB cluster run
+#
+# Pretrained encoder is FROZEN (stop_gradient after encoder).
+# Only concept_head + actor/critic FC layers are updated.
+#
+# Runtime:  Cluster GPU (Recommend 12GB+ VRAM)
+# Dataset:  Full WOMD 150GB Dataset
+# Steps:    15,000,000 (1 epoch over 150GB)
+
+# ── Paths ─────────────────────────────────────────────────────────────
+pretrained_dir: "runs_rlc/womd_sac_road_perceiver_minimal_42"
+data_path:      "data/training.tfrecord"
+output_dir:     "runs_cbm"
+run_name:       "cbm_v2_frozen_womd_150gb"
+
+# ── Type remapping (pretrained checkpoint was "perceiver"/"road") ──────
+encoder_remap:
+  perceiver: lq
+obs_type_remap:
+  road: vec
+  lane: vec
+
+# ── CBM architecture ──────────────────────────────────────────────────
+mode:           "frozen"   # frozen | joint
+num_concepts:   15
+concept_phases: [1, 2, 3]
+lambda_concept: 0.1        # weight for concept supervision loss
+
+# ── Parallelism / batch structure ─────────────────────────────────────
+num_parallel_envs:   1     # outer vmap dim (env streams per device)
+num_episodes_per_env: 8    # inner vmap dim (scaled up for high VRAM)
+
+# ── Training schedule ─────────────────────────────────────────────────
+scan_length:      640      # scaled up with num_episodes_per_env (8 * 80 / 1)
+scenario_length:   80      # waymax episode length
+unroll_length:      1      # unroll steps per policy step
+total_timesteps: 15_000_000
+
+# ── SAC hyperparameters ───────────────────────────────────────────────
+alpha:              0.2
+discount:           0.99
+tau:                0.005
+learning_rate:      0.0001
+batch_size:         128
+grad_updates_per_step: 8
+buffer_size:      1_000_000
+learning_start:    10_000  # More pre-fill for bigger buffer
+
+# ── Logging / checkpointing ───────────────────────────────────────────
+log_freq:    10            # log metrics every 10 iters (~6,400 steps)
+save_freq:   1000          # save checkpoint every 1000 iters (~640k steps)
+seed:        42
+disable_tqdm: false

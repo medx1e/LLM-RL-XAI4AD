@@ -1,0 +1,2603 @@
+{
+  "events": [
+    {
+      "event_type": "hazard_onset",
+      "severity": "critical",
+      "onset": 9,
+      "peak": 35,
+      "offset": 35,
+      "window": [
+        0,
+        45
+      ],
+      "scenario_id": "s000",
+      "causal_agent_id": 0,
+      "metadata": {
+        "min_ttc": 0.04929128661751747,
+        "ttc_threshold": 3.0
+      }
+    },
+    {
+      "event_type": "hazard_onset",
+      "severity": "critical",
+      "onset": 51,
+      "peak": 56,
+      "offset": 56,
+      "window": [
+        41,
+        66
+      ],
+      "scenario_id": "s000",
+      "causal_agent_id": 0,
+      "metadata": {
+        "min_ttc": 0.027550481259822845,
+        "ttc_threshold": 3.0
+      }
+    },
+    {
+      "event_type": "hazard_onset",
+      "severity": "high",
+      "onset": 0,
+      "peak": 8,
+      "offset": 8,
+      "window": [
+        0,
+        18
+      ],
+      "scenario_id": "s000",
+      "causal_agent_id": 1,
+      "metadata": {
+        "min_ttc": 1.1207520961761475,
+        "ttc_threshold": 3.0
+      }
+    },
+    {
+      "event_type": "hazard_onset",
+      "severity": "critical",
+      "onset": 10,
+      "peak": 34,
+      "offset": 34,
+      "window": [
+        0,
+        44
+      ],
+      "scenario_id": "s000",
+      "causal_agent_id": 1,
+      "metadata": {
+        "min_ttc": 0.05369245260953903,
+        "ttc_threshold": 3.0
+      }
+    },
+    {
+      "event_type": "hazard_onset",
+      "severity": "critical",
+      "onset": 46,
+      "peak": 50,
+      "offset": 50,
+      "window": [
+        36,
+        60
+      ],
+      "scenario_id": "s000",
+      "causal_agent_id": 1,
+      "metadata": {
+        "min_ttc": 0.35361388325691223,
+        "ttc_threshold": 3.0
+      }
+    },
+    {
+      "event_type": "hazard_onset",
+      "severity": "high",
+      "onset": 0,
+      "peak": 9,
+      "offset": 9,
+      "window": [
+        0,
+        19
+      ],
+      "scenario_id": "s000",
+      "causal_agent_id": 2,
+      "metadata": {
+        "min_ttc": 1.097424030303955,
+        "ttc_threshold": 3.0
+      }
+    },
+    {
+      "event_type": "hazard_onset",
+      "severity": "critical",
+      "onset": 14,
+      "peak": 32,
+      "offset": 36,
+      "window": [
+        4,
+        46
+      ],
+      "scenario_id": "s000",
+      "causal_agent_id": 2,
+      "metadata": {
+        "min_ttc": 0.05807258561253548,
+        "ttc_threshold": 3.0
+      }
+    },
+    {
+      "event_type": "hazard_onset",
+      "severity": "critical",
+      "onset": 53,
+      "peak": 59,
+      "offset": 59,
+      "window": [
+        43,
+        69
+      ],
+      "scenario_id": "s000",
+      "causal_agent_id": 2,
+      "metadata": {
+        "min_ttc": 0.10228068381547928,
+        "ttc_threshold": 3.0
+      }
+    },
+    {
+      "event_type": "hazard_onset",
+      "severity": "high",
+      "onset": 5,
+      "peak": 13,
+      "offset": 13,
+      "window": [
+        0,
+        23
+      ],
+      "scenario_id": "s000",
+      "causal_agent_id": 3,
+      "metadata": {
+        "min_ttc": 1.4633508920669556,
+        "ttc_threshold": 3.0
+      }
+    },
+    {
+      "event_type": "hazard_onset",
+      "severity": "critical",
+      "onset": 19,
+      "peak": 44,
+      "offset": 44,
+      "window": [
+        9,
+        54
+      ],
+      "scenario_id": "s000",
+      "causal_agent_id": 3,
+      "metadata": {
+        "min_ttc": 0.5732237696647644,
+        "ttc_threshold": 3.0
+      }
+    },
+    {
+      "event_type": "hazard_onset",
+      "severity": "critical",
+      "onset": 50,
+      "peak": 52,
+      "offset": 52,
+      "window": [
+        40,
+        62
+      ],
+      "scenario_id": "s000",
+      "causal_agent_id": 3,
+      "metadata": {
+        "min_ttc": 0.3897221088409424,
+        "ttc_threshold": 3.0
+      }
+    },
+    {
+      "event_type": "hazard_onset",
+      "severity": "critical",
+      "onset": 63,
+      "peak": 68,
+      "offset": 68,
+      "window": [
+        53,
+        78
+      ],
+      "scenario_id": "s000",
+      "causal_agent_id": 3,
+      "metadata": {
+        "min_ttc": 0.033315230160951614,
+        "ttc_threshold": 3.0
+      }
+    },
+    {
+      "event_type": "hazard_onset",
+      "severity": "medium",
+      "onset": 13,
+      "peak": 18,
+      "offset": 18,
+      "window": [
+        3,
+        28
+      ],
+      "scenario_id": "s000",
+      "causal_agent_id": 4,
+      "metadata": {
+        "min_ttc": 2.0592257976531982,
+        "ttc_threshold": 3.0
+      }
+    },
+    {
+      "event_type": "hazard_onset",
+      "severity": "critical",
+      "onset": 22,
+      "peak": 49,
+      "offset": 49,
+      "window": [
+        12,
+        59
+      ],
+      "scenario_id": "s000",
+      "causal_agent_id": 4,
+      "metadata": {
+        "min_ttc": 0.4653022587299347,
+        "ttc_threshold": 3.0
+      }
+    },
+    {
+      "event_type": "hazard_onset",
+      "severity": "critical",
+      "onset": 57,
+      "peak": 62,
+      "offset": 62,
+      "window": [
+        47,
+        72
+      ],
+      "scenario_id": "s000",
+      "causal_agent_id": 4,
+      "metadata": {
+        "min_ttc": 0.2986431419849396,
+        "ttc_threshold": 3.0
+      }
+    },
+    {
+      "event_type": "hazard_onset",
+      "severity": "medium",
+      "onset": 0,
+      "peak": 2,
+      "offset": 2,
+      "window": [
+        0,
+        12
+      ],
+      "scenario_id": "s000",
+      "causal_agent_id": 5,
+      "metadata": {
+        "min_ttc": 2.1931653022766113,
+        "ttc_threshold": 3.0
+      }
+    },
+    {
+      "event_type": "hazard_onset",
+      "severity": "low",
+      "onset": 8,
+      "peak": 12,
+      "offset": 12,
+      "window": [
+        0,
+        22
+      ],
+      "scenario_id": "s000",
+      "causal_agent_id": 5,
+      "metadata": {
+        "min_ttc": 2.334127426147461,
+        "ttc_threshold": 3.0
+      }
+    },
+    {
+      "event_type": "hazard_onset",
+      "severity": "low",
+      "onset": 19,
+      "peak": 21,
+      "offset": 21,
+      "window": [
+        9,
+        31
+      ],
+      "scenario_id": "s000",
+      "causal_agent_id": 5,
+      "metadata": {
+        "min_ttc": 2.326925039291382,
+        "ttc_threshold": 3.0
+      }
+    },
+    {
+      "event_type": "hazard_onset",
+      "severity": "high",
+      "onset": 28,
+      "peak": 32,
+      "offset": 33,
+      "window": [
+        18,
+        43
+      ],
+      "scenario_id": "s000",
+      "causal_agent_id": 5,
+      "metadata": {
+        "min_ttc": 1.479926347732544,
+        "ttc_threshold": 3.0
+      }
+    },
+    {
+      "event_type": "hazard_onset",
+      "severity": "critical",
+      "onset": 36,
+      "peak": 56,
+      "offset": 56,
+      "window": [
+        26,
+        66
+      ],
+      "scenario_id": "s000",
+      "causal_agent_id": 5,
+      "metadata": {
+        "min_ttc": 0.6254900097846985,
+        "ttc_threshold": 3.0
+      }
+    },
+    {
+      "event_type": "hazard_onset",
+      "severity": "low",
+      "onset": 15,
+      "peak": 17,
+      "offset": 18,
+      "window": [
+        5,
+        28
+      ],
+      "scenario_id": "s000",
+      "causal_agent_id": 6,
+      "metadata": {
+        "min_ttc": 2.4293813705444336,
+        "ttc_threshold": 3.0
+      }
+    },
+    {
+      "event_type": "hazard_onset",
+      "severity": "medium",
+      "onset": 30,
+      "peak": 32,
+      "offset": 32,
+      "window": [
+        20,
+        42
+      ],
+      "scenario_id": "s000",
+      "causal_agent_id": 6,
+      "metadata": {
+        "min_ttc": 2.1424777507781982,
+        "ttc_threshold": 3.0
+      }
+    },
+    {
+      "event_type": "hazard_onset",
+      "severity": "critical",
+      "onset": 36,
+      "peak": 59,
+      "offset": 59,
+      "window": [
+        26,
+        69
+      ],
+      "scenario_id": "s000",
+      "causal_agent_id": 6,
+      "metadata": {
+        "min_ttc": 0.010994009673595428,
+        "ttc_threshold": 3.0
+      }
+    },
+    {
+      "event_type": "hazard_onset",
+      "severity": "medium",
+      "onset": 25,
+      "peak": 27,
+      "offset": 27,
+      "window": [
+        15,
+        37
+      ],
+      "scenario_id": "s000",
+      "causal_agent_id": 7,
+      "metadata": {
+        "min_ttc": 1.732817530632019,
+        "ttc_threshold": 3.0
+      }
+    },
+    {
+      "event_type": "hazard_onset",
+      "severity": "critical",
+      "onset": 41,
+      "peak": 59,
+      "offset": 59,
+      "window": [
+        31,
+        69
+      ],
+      "scenario_id": "s000",
+      "causal_agent_id": 7,
+      "metadata": {
+        "min_ttc": 0.007834142073988914,
+        "ttc_threshold": 3.0
+      }
+    },
+    {
+      "event_type": "near_miss",
+      "severity": "critical",
+      "onset": 0,
+      "peak": 36,
+      "offset": 79,
+      "window": [
+        0,
+        79
+      ],
+      "scenario_id": "s000",
+      "causal_agent_id": 0,
+      "metadata": {
+        "min_distance": 0.07427535951137543,
+        "distance_threshold": 3.0
+      }
+    },
+    {
+      "event_type": "near_miss",
+      "severity": "critical",
+      "onset": 0,
+      "peak": 35,
+      "offset": 79,
+      "window": [
+        0,
+        79
+      ],
+      "scenario_id": "s000",
+      "causal_agent_id": 1,
+      "metadata": {
+        "min_distance": 0.1194291040301323,
+        "distance_threshold": 3.0
+      }
+    },
+    {
+      "event_type": "near_miss",
+      "severity": "critical",
+      "onset": 0,
+      "peak": 32,
+      "offset": 79,
+      "window": [
+        0,
+        79
+      ],
+      "scenario_id": "s000",
+      "causal_agent_id": 2,
+      "metadata": {
+        "min_distance": 0.1553279161453247,
+        "distance_threshold": 3.0
+      }
+    },
+    {
+      "event_type": "near_miss",
+      "severity": "critical",
+      "onset": 0,
+      "peak": 44,
+      "offset": 79,
+      "window": [
+        0,
+        79
+      ],
+      "scenario_id": "s000",
+      "causal_agent_id": 3,
+      "metadata": {
+        "min_distance": 0.2810806632041931,
+        "distance_threshold": 3.0
+      }
+    },
+    {
+      "event_type": "near_miss",
+      "severity": "critical",
+      "onset": 0,
+      "peak": 49,
+      "offset": 79,
+      "window": [
+        0,
+        79
+      ],
+      "scenario_id": "s000",
+      "causal_agent_id": 4,
+      "metadata": {
+        "min_distance": 0.3916114866733551,
+        "distance_threshold": 3.0
+      }
+    },
+    {
+      "event_type": "near_miss",
+      "severity": "critical",
+      "onset": 0,
+      "peak": 57,
+      "offset": 79,
+      "window": [
+        0,
+        79
+      ],
+      "scenario_id": "s000",
+      "causal_agent_id": 5,
+      "metadata": {
+        "min_distance": 0.609616219997406,
+        "distance_threshold": 3.0
+      }
+    },
+    {
+      "event_type": "near_miss",
+      "severity": "critical",
+      "onset": 0,
+      "peak": 59,
+      "offset": 79,
+      "window": [
+        0,
+        79
+      ],
+      "scenario_id": "s000",
+      "causal_agent_id": 6,
+      "metadata": {
+        "min_distance": 0.7016032338142395,
+        "distance_threshold": 3.0
+      }
+    },
+    {
+      "event_type": "near_miss",
+      "severity": "critical",
+      "onset": 0,
+      "peak": 0,
+      "offset": 79,
+      "window": [
+        0,
+        79
+      ],
+      "scenario_id": "s000",
+      "causal_agent_id": 7,
+      "metadata": {
+        "min_distance": 0.7391992211341858,
+        "distance_threshold": 3.0
+      }
+    },
+    {
+      "event_type": "evasive_steering",
+      "severity": "low",
+      "onset": 42,
+      "peak": 42,
+      "offset": 43,
+      "window": [
+        32,
+        53
+      ],
+      "scenario_id": "s000",
+      "causal_agent_id": 0,
+      "metadata": {
+        "max_steering": 0.4292217791080475,
+        "steering_threshold": 0.3
+      }
+    },
+    {
+      "event_type": "hazard_onset",
+      "severity": "critical",
+      "onset": 0,
+      "peak": 5,
+      "offset": 5,
+      "window": [
+        0,
+        15
+      ],
+      "scenario_id": "s001",
+      "causal_agent_id": 0,
+      "metadata": {
+        "min_ttc": 0.1603008210659027,
+        "ttc_threshold": 3.0
+      }
+    },
+    {
+      "event_type": "hazard_onset",
+      "severity": "critical",
+      "onset": 58,
+      "peak": 69,
+      "offset": 69,
+      "window": [
+        48,
+        79
+      ],
+      "scenario_id": "s001",
+      "causal_agent_id": 0,
+      "metadata": {
+        "min_ttc": 0.15894301235675812,
+        "ttc_threshold": 3.0
+      }
+    },
+    {
+      "event_type": "hazard_onset",
+      "severity": "critical",
+      "onset": 0,
+      "peak": 3,
+      "offset": 3,
+      "window": [
+        0,
+        13
+      ],
+      "scenario_id": "s001",
+      "causal_agent_id": 1,
+      "metadata": {
+        "min_ttc": 0.00853184424340725,
+        "ttc_threshold": 3.0
+      }
+    },
+    {
+      "event_type": "hazard_onset",
+      "severity": "critical",
+      "onset": 21,
+      "peak": 28,
+      "offset": 28,
+      "window": [
+        11,
+        38
+      ],
+      "scenario_id": "s001",
+      "causal_agent_id": 1,
+      "metadata": {
+        "min_ttc": 0.034836295992136,
+        "ttc_threshold": 3.0
+      }
+    },
+    {
+      "event_type": "hazard_onset",
+      "severity": "critical",
+      "onset": 37,
+      "peak": 57,
+      "offset": 57,
+      "window": [
+        27,
+        67
+      ],
+      "scenario_id": "s001",
+      "causal_agent_id": 1,
+      "metadata": {
+        "min_ttc": 0.8072243332862854,
+        "ttc_threshold": 3.0
+      }
+    },
+    {
+      "event_type": "hazard_onset",
+      "severity": "critical",
+      "onset": 17,
+      "peak": 20,
+      "offset": 20,
+      "window": [
+        7,
+        30
+      ],
+      "scenario_id": "s001",
+      "causal_agent_id": 2,
+      "metadata": {
+        "min_ttc": 0.3773375153541565,
+        "ttc_threshold": 3.0
+      }
+    },
+    {
+      "event_type": "hazard_onset",
+      "severity": "critical",
+      "onset": 26,
+      "peak": 31,
+      "offset": 31,
+      "window": [
+        16,
+        41
+      ],
+      "scenario_id": "s001",
+      "causal_agent_id": 2,
+      "metadata": {
+        "min_ttc": 0.010154391638934612,
+        "ttc_threshold": 3.0
+      }
+    },
+    {
+      "event_type": "hazard_onset",
+      "severity": "critical",
+      "onset": 41,
+      "peak": 46,
+      "offset": 46,
+      "window": [
+        31,
+        56
+      ],
+      "scenario_id": "s001",
+      "causal_agent_id": 2,
+      "metadata": {
+        "min_ttc": 0.017051100730895996,
+        "ttc_threshold": 3.0
+      }
+    },
+    {
+      "event_type": "hazard_onset",
+      "severity": "critical",
+      "onset": 51,
+      "peak": 54,
+      "offset": 54,
+      "window": [
+        41,
+        64
+      ],
+      "scenario_id": "s001",
+      "causal_agent_id": 2,
+      "metadata": {
+        "min_ttc": 0.024697473272681236,
+        "ttc_threshold": 3.0
+      }
+    },
+    {
+      "event_type": "hazard_onset",
+      "severity": "critical",
+      "onset": 59,
+      "peak": 76,
+      "offset": 76,
+      "window": [
+        49,
+        79
+      ],
+      "scenario_id": "s001",
+      "causal_agent_id": 2,
+      "metadata": {
+        "min_ttc": 0.01584577187895775,
+        "ttc_threshold": 3.0
+      }
+    },
+    {
+      "event_type": "hazard_onset",
+      "severity": "medium",
+      "onset": 0,
+      "peak": 1,
+      "offset": 4,
+      "window": [
+        0,
+        14
+      ],
+      "scenario_id": "s001",
+      "causal_agent_id": 3,
+      "metadata": {
+        "min_ttc": 1.9997429847717285,
+        "ttc_threshold": 3.0
+      }
+    },
+    {
+      "event_type": "hazard_onset",
+      "severity": "critical",
+      "onset": 19,
+      "peak": 21,
+      "offset": 25,
+      "window": [
+        9,
+        35
+      ],
+      "scenario_id": "s001",
+      "causal_agent_id": 3,
+      "metadata": {
+        "min_ttc": 0.1334112137556076,
+        "ttc_threshold": 3.0
+      }
+    },
+    {
+      "event_type": "hazard_onset",
+      "severity": "medium",
+      "onset": 34,
+      "peak": 36,
+      "offset": 36,
+      "window": [
+        24,
+        46
+      ],
+      "scenario_id": "s001",
+      "causal_agent_id": 3,
+      "metadata": {
+        "min_ttc": 1.517870306968689,
+        "ttc_threshold": 3.0
+      }
+    },
+    {
+      "event_type": "hazard_onset",
+      "severity": "critical",
+      "onset": 48,
+      "peak": 50,
+      "offset": 50,
+      "window": [
+        38,
+        60
+      ],
+      "scenario_id": "s001",
+      "causal_agent_id": 3,
+      "metadata": {
+        "min_ttc": 0.3088374733924866,
+        "ttc_threshold": 3.0
+      }
+    },
+    {
+      "event_type": "hazard_onset",
+      "severity": "medium",
+      "onset": 53,
+      "peak": 57,
+      "offset": 58,
+      "window": [
+        43,
+        68
+      ],
+      "scenario_id": "s001",
+      "causal_agent_id": 3,
+      "metadata": {
+        "min_ttc": 1.8527555465698242,
+        "ttc_threshold": 3.0
+      }
+    },
+    {
+      "event_type": "hazard_onset",
+      "severity": "critical",
+      "onset": 61,
+      "peak": 75,
+      "offset": 75,
+      "window": [
+        51,
+        79
+      ],
+      "scenario_id": "s001",
+      "causal_agent_id": 3,
+      "metadata": {
+        "min_ttc": 0.13124586641788483,
+        "ttc_threshold": 3.0
+      }
+    },
+    {
+      "event_type": "hazard_onset",
+      "severity": "critical",
+      "onset": 17,
+      "peak": 23,
+      "offset": 23,
+      "window": [
+        7,
+        33
+      ],
+      "scenario_id": "s001",
+      "causal_agent_id": 4,
+      "metadata": {
+        "min_ttc": 0.03314023092389107,
+        "ttc_threshold": 3.0
+      }
+    },
+    {
+      "event_type": "hazard_onset",
+      "severity": "medium",
+      "onset": 28,
+      "peak": 33,
+      "offset": 33,
+      "window": [
+        18,
+        43
+      ],
+      "scenario_id": "s001",
+      "causal_agent_id": 4,
+      "metadata": {
+        "min_ttc": 1.8276556730270386,
+        "ttc_threshold": 3.0
+      }
+    },
+    {
+      "event_type": "hazard_onset",
+      "severity": "medium",
+      "onset": 44,
+      "peak": 52,
+      "offset": 52,
+      "window": [
+        34,
+        62
+      ],
+      "scenario_id": "s001",
+      "causal_agent_id": 4,
+      "metadata": {
+        "min_ttc": 2.0499794483184814,
+        "ttc_threshold": 3.0
+      }
+    },
+    {
+      "event_type": "hazard_onset",
+      "severity": "medium",
+      "onset": 54,
+      "peak": 54,
+      "offset": 61,
+      "window": [
+        44,
+        71
+      ],
+      "scenario_id": "s001",
+      "causal_agent_id": 4,
+      "metadata": {
+        "min_ttc": 1.8695396184921265,
+        "ttc_threshold": 3.0
+      }
+    },
+    {
+      "event_type": "hazard_onset",
+      "severity": "critical",
+      "onset": 65,
+      "peak": 73,
+      "offset": 73,
+      "window": [
+        55,
+        79
+      ],
+      "scenario_id": "s001",
+      "causal_agent_id": 4,
+      "metadata": {
+        "min_ttc": 0.08429301530122757,
+        "ttc_threshold": 3.0
+      }
+    },
+    {
+      "event_type": "hazard_onset",
+      "severity": "critical",
+      "onset": 75,
+      "peak": 75,
+      "offset": 77,
+      "window": [
+        65,
+        79
+      ],
+      "scenario_id": "s001",
+      "causal_agent_id": 4,
+      "metadata": {
+        "min_ttc": 0.18159547448158264,
+        "ttc_threshold": 3.0
+      }
+    },
+    {
+      "event_type": "hazard_onset",
+      "severity": "low",
+      "onset": 9,
+      "peak": 9,
+      "offset": 11,
+      "window": [
+        0,
+        21
+      ],
+      "scenario_id": "s001",
+      "causal_agent_id": 5,
+      "metadata": {
+        "min_ttc": 2.2794318199157715,
+        "ttc_threshold": 3.0
+      }
+    },
+    {
+      "event_type": "hazard_onset",
+      "severity": "critical",
+      "onset": 13,
+      "peak": 16,
+      "offset": 16,
+      "window": [
+        3,
+        26
+      ],
+      "scenario_id": "s001",
+      "causal_agent_id": 5,
+      "metadata": {
+        "min_ttc": 0.3227970004081726,
+        "ttc_threshold": 3.0
+      }
+    },
+    {
+      "event_type": "hazard_onset",
+      "severity": "low",
+      "onset": 23,
+      "peak": 27,
+      "offset": 27,
+      "window": [
+        13,
+        37
+      ],
+      "scenario_id": "s001",
+      "causal_agent_id": 5,
+      "metadata": {
+        "min_ttc": 2.396611452102661,
+        "ttc_threshold": 3.0
+      }
+    },
+    {
+      "event_type": "hazard_onset",
+      "severity": "critical",
+      "onset": 63,
+      "peak": 65,
+      "offset": 65,
+      "window": [
+        53,
+        75
+      ],
+      "scenario_id": "s001",
+      "causal_agent_id": 5,
+      "metadata": {
+        "min_ttc": 0.42950180172920227,
+        "ttc_threshold": 3.0
+      }
+    },
+    {
+      "event_type": "hazard_onset",
+      "severity": "critical",
+      "onset": 67,
+      "peak": 72,
+      "offset": 72,
+      "window": [
+        57,
+        79
+      ],
+      "scenario_id": "s001",
+      "causal_agent_id": 5,
+      "metadata": {
+        "min_ttc": 0.25191062688827515,
+        "ttc_threshold": 3.0
+      }
+    },
+    {
+      "event_type": "hazard_onset",
+      "severity": "critical",
+      "onset": 75,
+      "peak": 78,
+      "offset": 78,
+      "window": [
+        65,
+        79
+      ],
+      "scenario_id": "s001",
+      "causal_agent_id": 5,
+      "metadata": {
+        "min_ttc": 0.38374632596969604,
+        "ttc_threshold": 3.0
+      }
+    },
+    {
+      "event_type": "hazard_onset",
+      "severity": "critical",
+      "onset": 36,
+      "peak": 38,
+      "offset": 38,
+      "window": [
+        26,
+        48
+      ],
+      "scenario_id": "s001",
+      "causal_agent_id": 6,
+      "metadata": {
+        "min_ttc": 0.6363726854324341,
+        "ttc_threshold": 3.0
+      }
+    },
+    {
+      "event_type": "hazard_onset",
+      "severity": "critical",
+      "onset": 71,
+      "peak": 77,
+      "offset": 77,
+      "window": [
+        61,
+        79
+      ],
+      "scenario_id": "s001",
+      "causal_agent_id": 6,
+      "metadata": {
+        "min_ttc": 0.430607408285141,
+        "ttc_threshold": 3.0
+      }
+    },
+    {
+      "event_type": "hazard_onset",
+      "severity": "critical",
+      "onset": 10,
+      "peak": 13,
+      "offset": 13,
+      "window": [
+        0,
+        23
+      ],
+      "scenario_id": "s001",
+      "causal_agent_id": 7,
+      "metadata": {
+        "min_ttc": 0.49028512835502625,
+        "ttc_threshold": 3.0
+      }
+    },
+    {
+      "event_type": "hazard_onset",
+      "severity": "critical",
+      "onset": 16,
+      "peak": 18,
+      "offset": 18,
+      "window": [
+        6,
+        28
+      ],
+      "scenario_id": "s001",
+      "causal_agent_id": 7,
+      "metadata": {
+        "min_ttc": 0.6061320900917053,
+        "ttc_threshold": 3.0
+      }
+    },
+    {
+      "event_type": "hazard_onset",
+      "severity": "critical",
+      "onset": 37,
+      "peak": 37,
+      "offset": 40,
+      "window": [
+        27,
+        50
+      ],
+      "scenario_id": "s001",
+      "causal_agent_id": 7,
+      "metadata": {
+        "min_ttc": 0.7140320539474487,
+        "ttc_threshold": 3.0
+      }
+    },
+    {
+      "event_type": "hazard_onset",
+      "severity": "medium",
+      "onset": 48,
+      "peak": 51,
+      "offset": 52,
+      "window": [
+        38,
+        62
+      ],
+      "scenario_id": "s001",
+      "causal_agent_id": 7,
+      "metadata": {
+        "min_ttc": 1.8431329727172852,
+        "ttc_threshold": 3.0
+      }
+    },
+    {
+      "event_type": "hazard_onset",
+      "severity": "critical",
+      "onset": 67,
+      "peak": 70,
+      "offset": 70,
+      "window": [
+        57,
+        79
+      ],
+      "scenario_id": "s001",
+      "causal_agent_id": 7,
+      "metadata": {
+        "min_ttc": 0.6935039758682251,
+        "ttc_threshold": 3.0
+      }
+    },
+    {
+      "event_type": "hazard_onset",
+      "severity": "critical",
+      "onset": 72,
+      "peak": 74,
+      "offset": 74,
+      "window": [
+        62,
+        79
+      ],
+      "scenario_id": "s001",
+      "causal_agent_id": 7,
+      "metadata": {
+        "min_ttc": 0.514763355255127,
+        "ttc_threshold": 3.0
+      }
+    },
+    {
+      "event_type": "near_miss",
+      "severity": "critical",
+      "onset": 0,
+      "peak": 71,
+      "offset": 79,
+      "window": [
+        0,
+        79
+      ],
+      "scenario_id": "s001",
+      "causal_agent_id": 0,
+      "metadata": {
+        "min_distance": 0.07263351231813431,
+        "distance_threshold": 3.0
+      }
+    },
+    {
+      "event_type": "near_miss",
+      "severity": "critical",
+      "onset": 0,
+      "peak": 58,
+      "offset": 79,
+      "window": [
+        0,
+        79
+      ],
+      "scenario_id": "s001",
+      "causal_agent_id": 1,
+      "metadata": {
+        "min_distance": 0.1111600324511528,
+        "distance_threshold": 3.0
+      }
+    },
+    {
+      "event_type": "near_miss",
+      "severity": "critical",
+      "onset": 0,
+      "peak": 76,
+      "offset": 79,
+      "window": [
+        0,
+        79
+      ],
+      "scenario_id": "s001",
+      "causal_agent_id": 2,
+      "metadata": {
+        "min_distance": 0.14832063019275665,
+        "distance_threshold": 3.0
+      }
+    },
+    {
+      "event_type": "near_miss",
+      "severity": "critical",
+      "onset": 0,
+      "peak": 76,
+      "offset": 79,
+      "window": [
+        0,
+        79
+      ],
+      "scenario_id": "s001",
+      "causal_agent_id": 3,
+      "metadata": {
+        "min_distance": 0.1551385223865509,
+        "distance_threshold": 3.0
+      }
+    },
+    {
+      "event_type": "near_miss",
+      "severity": "critical",
+      "onset": 0,
+      "peak": 79,
+      "offset": 79,
+      "window": [
+        0,
+        79
+      ],
+      "scenario_id": "s001",
+      "causal_agent_id": 4,
+      "metadata": {
+        "min_distance": 0.16496197879314423,
+        "distance_threshold": 3.0
+      }
+    },
+    {
+      "event_type": "near_miss",
+      "severity": "critical",
+      "onset": 0,
+      "peak": 78,
+      "offset": 79,
+      "window": [
+        0,
+        79
+      ],
+      "scenario_id": "s001",
+      "causal_agent_id": 5,
+      "metadata": {
+        "min_distance": 0.1840014010667801,
+        "distance_threshold": 3.0
+      }
+    },
+    {
+      "event_type": "near_miss",
+      "severity": "critical",
+      "onset": 0,
+      "peak": 79,
+      "offset": 79,
+      "window": [
+        0,
+        79
+      ],
+      "scenario_id": "s001",
+      "causal_agent_id": 6,
+      "metadata": {
+        "min_distance": 0.18919737637043,
+        "distance_threshold": 3.0
+      }
+    },
+    {
+      "event_type": "near_miss",
+      "severity": "critical",
+      "onset": 0,
+      "peak": 79,
+      "offset": 79,
+      "window": [
+        0,
+        79
+      ],
+      "scenario_id": "s001",
+      "causal_agent_id": 7,
+      "metadata": {
+        "min_distance": 0.25890326499938965,
+        "distance_threshold": 3.0
+      }
+    },
+    {
+      "event_type": "evasive_steering",
+      "severity": "high",
+      "onset": 71,
+      "peak": 74,
+      "offset": 75,
+      "window": [
+        61,
+        79
+      ],
+      "scenario_id": "s001",
+      "causal_agent_id": 0,
+      "metadata": {
+        "max_steering": 0.7277480959892273,
+        "steering_threshold": 0.3
+      }
+    },
+    {
+      "event_type": "hazard_onset",
+      "severity": "critical",
+      "onset": 28,
+      "peak": 34,
+      "offset": 34,
+      "window": [
+        18,
+        44
+      ],
+      "scenario_id": "s002",
+      "causal_agent_id": 0,
+      "metadata": {
+        "min_ttc": 0.04968249425292015,
+        "ttc_threshold": 3.0
+      }
+    },
+    {
+      "event_type": "hazard_onset",
+      "severity": "critical",
+      "onset": 22,
+      "peak": 27,
+      "offset": 27,
+      "window": [
+        12,
+        37
+      ],
+      "scenario_id": "s002",
+      "causal_agent_id": 1,
+      "metadata": {
+        "min_ttc": 0.33035629987716675,
+        "ttc_threshold": 3.0
+      }
+    },
+    {
+      "event_type": "hazard_onset",
+      "severity": "critical",
+      "onset": 16,
+      "peak": 20,
+      "offset": 21,
+      "window": [
+        6,
+        31
+      ],
+      "scenario_id": "s002",
+      "causal_agent_id": 2,
+      "metadata": {
+        "min_ttc": 0.6205118894577026,
+        "ttc_threshold": 3.0
+      }
+    },
+    {
+      "event_type": "hazard_onset",
+      "severity": "critical",
+      "onset": 0,
+      "peak": 12,
+      "offset": 13,
+      "window": [
+        0,
+        23
+      ],
+      "scenario_id": "s002",
+      "causal_agent_id": 4,
+      "metadata": {
+        "min_ttc": 0.980444610118866,
+        "ttc_threshold": 3.0
+      }
+    },
+    {
+      "event_type": "hazard_onset",
+      "severity": "critical",
+      "onset": 72,
+      "peak": 76,
+      "offset": 76,
+      "window": [
+        62,
+        79
+      ],
+      "scenario_id": "s002",
+      "causal_agent_id": 4,
+      "metadata": {
+        "min_ttc": 0.5033158659934998,
+        "ttc_threshold": 3.0
+      }
+    },
+    {
+      "event_type": "hazard_onset",
+      "severity": "medium",
+      "onset": 17,
+      "peak": 21,
+      "offset": 31,
+      "window": [
+        7,
+        41
+      ],
+      "scenario_id": "s002",
+      "causal_agent_id": 5,
+      "metadata": {
+        "min_ttc": 1.8310985565185547,
+        "ttc_threshold": 3.0
+      }
+    },
+    {
+      "event_type": "hazard_onset",
+      "severity": "medium",
+      "onset": 13,
+      "peak": 13,
+      "offset": 16,
+      "window": [
+        3,
+        26
+      ],
+      "scenario_id": "s002",
+      "causal_agent_id": 6,
+      "metadata": {
+        "min_ttc": 1.6950043439865112,
+        "ttc_threshold": 3.0
+      }
+    },
+    {
+      "event_type": "hazard_onset",
+      "severity": "critical",
+      "onset": 68,
+      "peak": 68,
+      "offset": 71,
+      "window": [
+        58,
+        79
+      ],
+      "scenario_id": "s002",
+      "causal_agent_id": 6,
+      "metadata": {
+        "min_ttc": 0.7460289001464844,
+        "ttc_threshold": 3.0
+      }
+    },
+    {
+      "event_type": "hazard_onset",
+      "severity": "critical",
+      "onset": 64,
+      "peak": 66,
+      "offset": 67,
+      "window": [
+        54,
+        77
+      ],
+      "scenario_id": "s002",
+      "causal_agent_id": 7,
+      "metadata": {
+        "min_ttc": 0.747437059879303,
+        "ttc_threshold": 3.0
+      }
+    },
+    {
+      "event_type": "near_miss",
+      "severity": "critical",
+      "onset": 0,
+      "peak": 35,
+      "offset": 79,
+      "window": [
+        0,
+        79
+      ],
+      "scenario_id": "s002",
+      "causal_agent_id": 0,
+      "metadata": {
+        "min_distance": 0.02798355184495449,
+        "distance_threshold": 3.0
+      }
+    },
+    {
+      "event_type": "near_miss",
+      "severity": "critical",
+      "onset": 0,
+      "peak": 28,
+      "offset": 79,
+      "window": [
+        0,
+        79
+      ],
+      "scenario_id": "s002",
+      "causal_agent_id": 1,
+      "metadata": {
+        "min_distance": 0.05740387365221977,
+        "distance_threshold": 3.0
+      }
+    },
+    {
+      "event_type": "near_miss",
+      "severity": "critical",
+      "onset": 0,
+      "peak": 48,
+      "offset": 79,
+      "window": [
+        0,
+        79
+      ],
+      "scenario_id": "s002",
+      "causal_agent_id": 2,
+      "metadata": {
+        "min_distance": 0.08974247425794601,
+        "distance_threshold": 3.0
+      }
+    },
+    {
+      "event_type": "near_miss",
+      "severity": "critical",
+      "onset": 0,
+      "peak": 26,
+      "offset": 79,
+      "window": [
+        0,
+        79
+      ],
+      "scenario_id": "s002",
+      "causal_agent_id": 3,
+      "metadata": {
+        "min_distance": 0.12781114876270294,
+        "distance_threshold": 3.0
+      }
+    },
+    {
+      "event_type": "near_miss",
+      "severity": "critical",
+      "onset": 0,
+      "peak": 26,
+      "offset": 79,
+      "window": [
+        0,
+        79
+      ],
+      "scenario_id": "s002",
+      "causal_agent_id": 4,
+      "metadata": {
+        "min_distance": 0.14098596572875977,
+        "distance_threshold": 3.0
+      }
+    },
+    {
+      "event_type": "near_miss",
+      "severity": "critical",
+      "onset": 0,
+      "peak": 63,
+      "offset": 79,
+      "window": [
+        0,
+        79
+      ],
+      "scenario_id": "s002",
+      "causal_agent_id": 5,
+      "metadata": {
+        "min_distance": 0.1733890026807785,
+        "distance_threshold": 3.0
+      }
+    },
+    {
+      "event_type": "near_miss",
+      "severity": "critical",
+      "onset": 0,
+      "peak": 64,
+      "offset": 79,
+      "window": [
+        0,
+        79
+      ],
+      "scenario_id": "s002",
+      "causal_agent_id": 6,
+      "metadata": {
+        "min_distance": 0.1971200555562973,
+        "distance_threshold": 3.0
+      }
+    },
+    {
+      "event_type": "near_miss",
+      "severity": "critical",
+      "onset": 0,
+      "peak": 67,
+      "offset": 79,
+      "window": [
+        0,
+        79
+      ],
+      "scenario_id": "s002",
+      "causal_agent_id": 7,
+      "metadata": {
+        "min_distance": 0.257415771484375,
+        "distance_threshold": 3.0
+      }
+    },
+    {
+      "event_type": "near_miss",
+      "severity": "critical",
+      "onset": 0,
+      "peak": 0,
+      "offset": 79,
+      "window": [
+        0,
+        79
+      ],
+      "scenario_id": "s003",
+      "causal_agent_id": 0,
+      "metadata": {
+        "min_distance": 0.1588316410779953,
+        "distance_threshold": 3.0
+      }
+    },
+    {
+      "event_type": "near_miss",
+      "severity": "critical",
+      "onset": 0,
+      "peak": 56,
+      "offset": 79,
+      "window": [
+        0,
+        79
+      ],
+      "scenario_id": "s003",
+      "causal_agent_id": 1,
+      "metadata": {
+        "min_distance": 0.1667674481868744,
+        "distance_threshold": 3.0
+      }
+    },
+    {
+      "event_type": "near_miss",
+      "severity": "critical",
+      "onset": 0,
+      "peak": 35,
+      "offset": 79,
+      "window": [
+        0,
+        79
+      ],
+      "scenario_id": "s003",
+      "causal_agent_id": 2,
+      "metadata": {
+        "min_distance": 0.201341912150383,
+        "distance_threshold": 3.0
+      }
+    },
+    {
+      "event_type": "near_miss",
+      "severity": "critical",
+      "onset": 0,
+      "peak": 35,
+      "offset": 79,
+      "window": [
+        0,
+        79
+      ],
+      "scenario_id": "s003",
+      "causal_agent_id": 3,
+      "metadata": {
+        "min_distance": 0.2636086940765381,
+        "distance_threshold": 3.0
+      }
+    },
+    {
+      "event_type": "near_miss",
+      "severity": "critical",
+      "onset": 0,
+      "peak": 35,
+      "offset": 79,
+      "window": [
+        0,
+        79
+      ],
+      "scenario_id": "s003",
+      "causal_agent_id": 4,
+      "metadata": {
+        "min_distance": 0.26949575543403625,
+        "distance_threshold": 3.0
+      }
+    },
+    {
+      "event_type": "near_miss",
+      "severity": "critical",
+      "onset": 0,
+      "peak": 35,
+      "offset": 79,
+      "window": [
+        0,
+        79
+      ],
+      "scenario_id": "s003",
+      "causal_agent_id": 5,
+      "metadata": {
+        "min_distance": 0.28831008076667786,
+        "distance_threshold": 3.0
+      }
+    },
+    {
+      "event_type": "near_miss",
+      "severity": "critical",
+      "onset": 0,
+      "peak": 36,
+      "offset": 79,
+      "window": [
+        0,
+        79
+      ],
+      "scenario_id": "s003",
+      "causal_agent_id": 6,
+      "metadata": {
+        "min_distance": 0.3313320279121399,
+        "distance_threshold": 3.0
+      }
+    },
+    {
+      "event_type": "near_miss",
+      "severity": "critical",
+      "onset": 0,
+      "peak": 79,
+      "offset": 79,
+      "window": [
+        0,
+        79
+      ],
+      "scenario_id": "s003",
+      "causal_agent_id": 7,
+      "metadata": {
+        "min_distance": 0.3696669638156891,
+        "distance_threshold": 3.0
+      }
+    },
+    {
+      "event_type": "hazard_onset",
+      "severity": "critical",
+      "onset": 42,
+      "peak": 45,
+      "offset": 45,
+      "window": [
+        32,
+        55
+      ],
+      "scenario_id": "s004",
+      "causal_agent_id": 0,
+      "metadata": {
+        "min_ttc": 0.04650060087442398,
+        "ttc_threshold": 3.0
+      }
+    },
+    {
+      "event_type": "hazard_onset",
+      "severity": "critical",
+      "onset": 60,
+      "peak": 62,
+      "offset": 62,
+      "window": [
+        50,
+        72
+      ],
+      "scenario_id": "s004",
+      "causal_agent_id": 0,
+      "metadata": {
+        "min_ttc": 0.017466295510530472,
+        "ttc_threshold": 3.0
+      }
+    },
+    {
+      "event_type": "hazard_onset",
+      "severity": "critical",
+      "onset": 67,
+      "peak": 70,
+      "offset": 70,
+      "window": [
+        57,
+        79
+      ],
+      "scenario_id": "s004",
+      "causal_agent_id": 0,
+      "metadata": {
+        "min_ttc": 0.04009510576725006,
+        "ttc_threshold": 3.0
+      }
+    },
+    {
+      "event_type": "hazard_onset",
+      "severity": "critical",
+      "onset": 75,
+      "peak": 78,
+      "offset": 78,
+      "window": [
+        65,
+        79
+      ],
+      "scenario_id": "s004",
+      "causal_agent_id": 0,
+      "metadata": {
+        "min_ttc": 0.0481824055314064,
+        "ttc_threshold": 3.0
+      }
+    },
+    {
+      "event_type": "hazard_onset",
+      "severity": "medium",
+      "onset": 0,
+      "peak": 0,
+      "offset": 7,
+      "window": [
+        0,
+        17
+      ],
+      "scenario_id": "s004",
+      "causal_agent_id": 1,
+      "metadata": {
+        "min_ttc": 1.8765981197357178,
+        "ttc_threshold": 3.0
+      }
+    },
+    {
+      "event_type": "hazard_onset",
+      "severity": "critical",
+      "onset": 27,
+      "peak": 35,
+      "offset": 35,
+      "window": [
+        17,
+        45
+      ],
+      "scenario_id": "s004",
+      "causal_agent_id": 1,
+      "metadata": {
+        "min_ttc": 0.027031589299440384,
+        "ttc_threshold": 3.0
+      }
+    },
+    {
+      "event_type": "hazard_onset",
+      "severity": "critical",
+      "onset": 39,
+      "peak": 41,
+      "offset": 41,
+      "window": [
+        29,
+        51
+      ],
+      "scenario_id": "s004",
+      "causal_agent_id": 1,
+      "metadata": {
+        "min_ttc": 0.23619964718818665,
+        "ttc_threshold": 3.0
+      }
+    },
+    {
+      "event_type": "hazard_onset",
+      "severity": "critical",
+      "onset": 0,
+      "peak": 23,
+      "offset": 26,
+      "window": [
+        0,
+        36
+      ],
+      "scenario_id": "s004",
+      "causal_agent_id": 2,
+      "metadata": {
+        "min_ttc": 0.4201994836330414,
+        "ttc_threshold": 3.0
+      }
+    },
+    {
+      "event_type": "hazard_onset",
+      "severity": "critical",
+      "onset": 34,
+      "peak": 38,
+      "offset": 38,
+      "window": [
+        24,
+        48
+      ],
+      "scenario_id": "s004",
+      "causal_agent_id": 2,
+      "metadata": {
+        "min_ttc": 0.3048933744430542,
+        "ttc_threshold": 3.0
+      }
+    },
+    {
+      "event_type": "hazard_onset",
+      "severity": "critical",
+      "onset": 47,
+      "peak": 50,
+      "offset": 50,
+      "window": [
+        37,
+        60
+      ],
+      "scenario_id": "s004",
+      "causal_agent_id": 2,
+      "metadata": {
+        "min_ttc": 0.049957290291786194,
+        "ttc_threshold": 3.0
+      }
+    },
+    {
+      "event_type": "hazard_onset",
+      "severity": "critical",
+      "onset": 64,
+      "peak": 66,
+      "offset": 66,
+      "window": [
+        54,
+        76
+      ],
+      "scenario_id": "s004",
+      "causal_agent_id": 2,
+      "metadata": {
+        "min_ttc": 0.24479630589485168,
+        "ttc_threshold": 3.0
+      }
+    },
+    {
+      "event_type": "hazard_onset",
+      "severity": "critical",
+      "onset": 70,
+      "peak": 72,
+      "offset": 72,
+      "window": [
+        60,
+        79
+      ],
+      "scenario_id": "s004",
+      "causal_agent_id": 2,
+      "metadata": {
+        "min_ttc": 0.022257445380091667,
+        "ttc_threshold": 3.0
+      }
+    },
+    {
+      "event_type": "hazard_onset",
+      "severity": "critical",
+      "onset": 0,
+      "peak": 28,
+      "offset": 28,
+      "window": [
+        0,
+        38
+      ],
+      "scenario_id": "s004",
+      "causal_agent_id": 3,
+      "metadata": {
+        "min_ttc": 0.07678216695785522,
+        "ttc_threshold": 3.0
+      }
+    },
+    {
+      "event_type": "hazard_onset",
+      "severity": "critical",
+      "onset": 36,
+      "peak": 42,
+      "offset": 42,
+      "window": [
+        26,
+        52
+      ],
+      "scenario_id": "s004",
+      "causal_agent_id": 3,
+      "metadata": {
+        "min_ttc": 0.09120909869670868,
+        "ttc_threshold": 3.0
+      }
+    },
+    {
+      "event_type": "hazard_onset",
+      "severity": "critical",
+      "onset": 50,
+      "peak": 53,
+      "offset": 53,
+      "window": [
+        40,
+        63
+      ],
+      "scenario_id": "s004",
+      "causal_agent_id": 3,
+      "metadata": {
+        "min_ttc": 0.12012528628110886,
+        "ttc_threshold": 3.0
+      }
+    },
+    {
+      "event_type": "hazard_onset",
+      "severity": "critical",
+      "onset": 66,
+      "peak": 69,
+      "offset": 69,
+      "window": [
+        56,
+        79
+      ],
+      "scenario_id": "s004",
+      "causal_agent_id": 3,
+      "metadata": {
+        "min_ttc": 0.20817048847675323,
+        "ttc_threshold": 3.0
+      }
+    },
+    {
+      "event_type": "hazard_onset",
+      "severity": "critical",
+      "onset": 71,
+      "peak": 73,
+      "offset": 73,
+      "window": [
+        61,
+        79
+      ],
+      "scenario_id": "s004",
+      "causal_agent_id": 3,
+      "metadata": {
+        "min_ttc": 0.3361733853816986,
+        "ttc_threshold": 3.0
+      }
+    },
+    {
+      "event_type": "hazard_onset",
+      "severity": "critical",
+      "onset": 0,
+      "peak": 9,
+      "offset": 9,
+      "window": [
+        0,
+        19
+      ],
+      "scenario_id": "s004",
+      "causal_agent_id": 4,
+      "metadata": {
+        "min_ttc": 0.0276445671916008,
+        "ttc_threshold": 3.0
+      }
+    },
+    {
+      "event_type": "hazard_onset",
+      "severity": "critical",
+      "onset": 22,
+      "peak": 32,
+      "offset": 35,
+      "window": [
+        12,
+        45
+      ],
+      "scenario_id": "s004",
+      "causal_agent_id": 4,
+      "metadata": {
+        "min_ttc": 0.3152374029159546,
+        "ttc_threshold": 3.0
+      }
+    },
+    {
+      "event_type": "hazard_onset",
+      "severity": "critical",
+      "onset": 42,
+      "peak": 44,
+      "offset": 44,
+      "window": [
+        32,
+        54
+      ],
+      "scenario_id": "s004",
+      "causal_agent_id": 4,
+      "metadata": {
+        "min_ttc": 0.3951168954372406,
+        "ttc_threshold": 3.0
+      }
+    },
+    {
+      "event_type": "hazard_onset",
+      "severity": "critical",
+      "onset": 53,
+      "peak": 56,
+      "offset": 56,
+      "window": [
+        43,
+        66
+      ],
+      "scenario_id": "s004",
+      "causal_agent_id": 4,
+      "metadata": {
+        "min_ttc": 0.33969542384147644,
+        "ttc_threshold": 3.0
+      }
+    },
+    {
+      "event_type": "hazard_onset",
+      "severity": "low",
+      "onset": 67,
+      "peak": 68,
+      "offset": 70,
+      "window": [
+        57,
+        79
+      ],
+      "scenario_id": "s004",
+      "causal_agent_id": 4,
+      "metadata": {
+        "min_ttc": 2.4173667430877686,
+        "ttc_threshold": 3.0
+      }
+    },
+    {
+      "event_type": "hazard_onset",
+      "severity": "low",
+      "onset": 72,
+      "peak": 73,
+      "offset": 76,
+      "window": [
+        62,
+        79
+      ],
+      "scenario_id": "s004",
+      "causal_agent_id": 4,
+      "metadata": {
+        "min_ttc": 2.4725639820098877,
+        "ttc_threshold": 3.0
+      }
+    },
+    {
+      "event_type": "hazard_onset",
+      "severity": "low",
+      "onset": 0,
+      "peak": 1,
+      "offset": 6,
+      "window": [
+        0,
+        16
+      ],
+      "scenario_id": "s004",
+      "causal_agent_id": 5,
+      "metadata": {
+        "min_ttc": 2.531902313232422,
+        "ttc_threshold": 3.0
+      }
+    },
+    {
+      "event_type": "hazard_onset",
+      "severity": "critical",
+      "onset": 19,
+      "peak": 31,
+      "offset": 31,
+      "window": [
+        9,
+        41
+      ],
+      "scenario_id": "s004",
+      "causal_agent_id": 5,
+      "metadata": {
+        "min_ttc": 0.3968987464904785,
+        "ttc_threshold": 3.0
+      }
+    },
+    {
+      "event_type": "hazard_onset",
+      "severity": "critical",
+      "onset": 33,
+      "peak": 37,
+      "offset": 37,
+      "window": [
+        23,
+        47
+      ],
+      "scenario_id": "s004",
+      "causal_agent_id": 5,
+      "metadata": {
+        "min_ttc": 0.012959679588675499,
+        "ttc_threshold": 3.0
+      }
+    },
+    {
+      "event_type": "hazard_onset",
+      "severity": "critical",
+      "onset": 43,
+      "peak": 45,
+      "offset": 45,
+      "window": [
+        33,
+        55
+      ],
+      "scenario_id": "s004",
+      "causal_agent_id": 5,
+      "metadata": {
+        "min_ttc": 0.06958282738924026,
+        "ttc_threshold": 3.0
+      }
+    },
+    {
+      "event_type": "hazard_onset",
+      "severity": "critical",
+      "onset": 53,
+      "peak": 57,
+      "offset": 57,
+      "window": [
+        43,
+        67
+      ],
+      "scenario_id": "s004",
+      "causal_agent_id": 5,
+      "metadata": {
+        "min_ttc": 0.0855102464556694,
+        "ttc_threshold": 3.0
+      }
+    },
+    {
+      "event_type": "hazard_onset",
+      "severity": "critical",
+      "onset": 69,
+      "peak": 70,
+      "offset": 71,
+      "window": [
+        59,
+        79
+      ],
+      "scenario_id": "s004",
+      "causal_agent_id": 5,
+      "metadata": {
+        "min_ttc": 0.5199797749519348,
+        "ttc_threshold": 3.0
+      }
+    },
+    {
+      "event_type": "hazard_onset",
+      "severity": "medium",
+      "onset": 1,
+      "peak": 18,
+      "offset": 18,
+      "window": [
+        0,
+        28
+      ],
+      "scenario_id": "s004",
+      "causal_agent_id": 6,
+      "metadata": {
+        "min_ttc": 1.557837963104248,
+        "ttc_threshold": 3.0
+      }
+    },
+    {
+      "event_type": "hazard_onset",
+      "severity": "critical",
+      "onset": 24,
+      "peak": 38,
+      "offset": 38,
+      "window": [
+        14,
+        48
+      ],
+      "scenario_id": "s004",
+      "causal_agent_id": 6,
+      "metadata": {
+        "min_ttc": 0.03579185530543327,
+        "ttc_threshold": 3.0
+      }
+    },
+    {
+      "event_type": "hazard_onset",
+      "severity": "critical",
+      "onset": 45,
+      "peak": 47,
+      "offset": 47,
+      "window": [
+        35,
+        57
+      ],
+      "scenario_id": "s004",
+      "causal_agent_id": 6,
+      "metadata": {
+        "min_ttc": 0.4543481171131134,
+        "ttc_threshold": 3.0
+      }
+    },
+    {
+      "event_type": "hazard_onset",
+      "severity": "critical",
+      "onset": 57,
+      "peak": 60,
+      "offset": 60,
+      "window": [
+        47,
+        70
+      ],
+      "scenario_id": "s004",
+      "causal_agent_id": 6,
+      "metadata": {
+        "min_ttc": 0.5615503191947937,
+        "ttc_threshold": 3.0
+      }
+    },
+    {
+      "event_type": "hazard_onset",
+      "severity": "critical",
+      "onset": 64,
+      "peak": 64,
+      "offset": 66,
+      "window": [
+        54,
+        76
+      ],
+      "scenario_id": "s004",
+      "causal_agent_id": 6,
+      "metadata": {
+        "min_ttc": 0.5404564738273621,
+        "ttc_threshold": 3.0
+      }
+    },
+    {
+      "event_type": "hazard_onset",
+      "severity": "critical",
+      "onset": 0,
+      "peak": 23,
+      "offset": 23,
+      "window": [
+        0,
+        33
+      ],
+      "scenario_id": "s004",
+      "causal_agent_id": 7,
+      "metadata": {
+        "min_ttc": 0.9815424084663391,
+        "ttc_threshold": 3.0
+      }
+    },
+    {
+      "event_type": "hazard_onset",
+      "severity": "critical",
+      "onset": 25,
+      "peak": 32,
+      "offset": 32,
+      "window": [
+        15,
+        42
+      ],
+      "scenario_id": "s004",
+      "causal_agent_id": 7,
+      "metadata": {
+        "min_ttc": 0.6348824501037598,
+        "ttc_threshold": 3.0
+      }
+    },
+    {
+      "event_type": "hazard_onset",
+      "severity": "critical",
+      "onset": 37,
+      "peak": 38,
+      "offset": 41,
+      "window": [
+        27,
+        51
+      ],
+      "scenario_id": "s004",
+      "causal_agent_id": 7,
+      "metadata": {
+        "min_ttc": 0.47221052646636963,
+        "ttc_threshold": 3.0
+      }
+    },
+    {
+      "event_type": "hazard_onset",
+      "severity": "critical",
+      "onset": 50,
+      "peak": 52,
+      "offset": 52,
+      "window": [
+        40,
+        62
+      ],
+      "scenario_id": "s004",
+      "causal_agent_id": 7,
+      "metadata": {
+        "min_ttc": 0.41307559609413147,
+        "ttc_threshold": 3.0
+      }
+    },
+    {
+      "event_type": "hazard_onset",
+      "severity": "low",
+      "onset": 58,
+      "peak": 60,
+      "offset": 63,
+      "window": [
+        48,
+        73
+      ],
+      "scenario_id": "s004",
+      "causal_agent_id": 7,
+      "metadata": {
+        "min_ttc": 2.278510570526123,
+        "ttc_threshold": 3.0
+      }
+    },
+    {
+      "event_type": "hazard_onset",
+      "severity": "critical",
+      "onset": 65,
+      "peak": 67,
+      "offset": 67,
+      "window": [
+        55,
+        77
+      ],
+      "scenario_id": "s004",
+      "causal_agent_id": 7,
+      "metadata": {
+        "min_ttc": 0.04372503608465195,
+        "ttc_threshold": 3.0
+      }
+    },
+    {
+      "event_type": "near_miss",
+      "severity": "critical",
+      "onset": 0,
+      "peak": 0,
+      "offset": 79,
+      "window": [
+        0,
+        79
+      ],
+      "scenario_id": "s004",
+      "causal_agent_id": 0,
+      "metadata": {
+        "min_distance": 0.08300565183162689,
+        "distance_threshold": 3.0
+      }
+    },
+    {
+      "event_type": "near_miss",
+      "severity": "critical",
+      "onset": 0,
+      "peak": 15,
+      "offset": 79,
+      "window": [
+        0,
+        79
+      ],
+      "scenario_id": "s004",
+      "causal_agent_id": 1,
+      "metadata": {
+        "min_distance": 0.22175663709640503,
+        "distance_threshold": 3.0
+      }
+    },
+    {
+      "event_type": "near_miss",
+      "severity": "critical",
+      "onset": 0,
+      "peak": 39,
+      "offset": 79,
+      "window": [
+        0,
+        79
+      ],
+      "scenario_id": "s004",
+      "causal_agent_id": 2,
+      "metadata": {
+        "min_distance": 0.24552276730537415,
+        "distance_threshold": 3.0
+      }
+    },
+    {
+      "event_type": "near_miss",
+      "severity": "critical",
+      "onset": 0,
+      "peak": 53,
+      "offset": 79,
+      "window": [
+        0,
+        79
+      ],
+      "scenario_id": "s004",
+      "causal_agent_id": 3,
+      "metadata": {
+        "min_distance": 0.2598423957824707,
+        "distance_threshold": 3.0
+      }
+    },
+    {
+      "event_type": "near_miss",
+      "severity": "critical",
+      "onset": 0,
+      "peak": 45,
+      "offset": 79,
+      "window": [
+        0,
+        79
+      ],
+      "scenario_id": "s004",
+      "causal_agent_id": 4,
+      "metadata": {
+        "min_distance": 0.2910654842853546,
+        "distance_threshold": 3.0
+      }
+    },
+    {
+      "event_type": "near_miss",
+      "severity": "critical",
+      "onset": 0,
+      "peak": 46,
+      "offset": 79,
+      "window": [
+        0,
+        79
+      ],
+      "scenario_id": "s004",
+      "causal_agent_id": 5,
+      "metadata": {
+        "min_distance": 0.3078731298446655,
+        "distance_threshold": 3.0
+      }
+    },
+    {
+      "event_type": "near_miss",
+      "severity": "critical",
+      "onset": 0,
+      "peak": 38,
+      "offset": 79,
+      "window": [
+        0,
+        79
+      ],
+      "scenario_id": "s004",
+      "causal_agent_id": 6,
+      "metadata": {
+        "min_distance": 0.31449970602989197,
+        "distance_threshold": 3.0
+      }
+    },
+    {
+      "event_type": "near_miss",
+      "severity": "critical",
+      "onset": 0,
+      "peak": 42,
+      "offset": 79,
+      "window": [
+        0,
+        79
+      ],
+      "scenario_id": "s004",
+      "causal_agent_id": 7,
+      "metadata": {
+        "min_distance": 0.33046606183052063,
+        "distance_threshold": 3.0
+      }
+    }
+  ],
+  "summary": {
+    "total_events": 152,
+    "unique_scenarios": 5,
+    "by_type": {
+      "hazard_onset": 110,
+      "near_miss": 40,
+      "evasive_steering": 2
+    },
+    "by_severity": {
+      "critical": 122,
+      "high": 5,
+      "medium": 15,
+      "low": 10
+    }
+  }
+}

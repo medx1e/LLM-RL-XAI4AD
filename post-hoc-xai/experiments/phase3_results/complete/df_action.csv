@@ -1,0 +1,13 @@
+model,scenario_id,attention_signal,method,action_type,pearson_r,n
+complete,0,norm_weighted,vg,braking,0.9520519775288225,35
+complete,0,norm_weighted,ig,braking,0.9391783187638097,35
+complete,0,norm_weighted,vg,accelerating,0.9819622514386596,31
+complete,0,norm_weighted,ig,accelerating,0.6653876357461399,31
+complete,0,norm_weighted,vg,neutral,0.9814023210858076,14
+complete,0,norm_weighted,ig,neutral,0.9602616909570935,14
+complete,0,rollout,vg,braking,0.9250676324939875,35
+complete,0,rollout,ig,braking,0.9024570325000296,35
+complete,0,rollout,vg,accelerating,0.9194554201513508,31
+complete,0,rollout,ig,accelerating,0.45844368880218467,31
+complete,0,rollout,vg,neutral,0.9420121099558082,14
+complete,0,rollout,ig,neutral,0.8873104601792966,14

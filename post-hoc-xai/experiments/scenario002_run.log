@@ -1,0 +1,170 @@
+2026-02-22 15:18:19.317538: E external/local_xla/xla/stream_executor/cuda/cuda_fft.cc:477] Unable to register cuFFT factory: Attempting to register factory for plugin cuFFT when one has already been registered
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+E0000 00:00:1771769899.399776    9201 cuda_dnn.cc:8310] Unable to register cuDNN factory: Attempting to register factory for plugin cuDNN when one has already been registered
+E0000 00:00:1771769899.420260    9201 cuda_blas.cc:1418] Unable to register cuBLAS factory: Attempting to register factory for plugin cuBLAS when one has already been registered
+I0000 00:00:1771769906.922806    9201 gpu_device.cc:2022] Created device /job:localhost/replica:0/task:0/device:GPU:0 with 4603 MB memory:  -> device: 0, name: NVIDIA GeForce GTX 1660 Ti, pci bus id: 0000:01:00.0, compute capability: 7.5
+=================================================================
+STEP 1: Loading model
+=================================================================
+Remapping: vmax.learning.algorithms.rl.sac.sac_factory -> vmax.agents.learning.reinforcement.sac.sac_factory
+Model      : perceiver_perceiver
+Obs structure: {'sdc_trajectory': (0, 40), 'other_agents': (40, 360), 'roadgraph': (360, 1360), 'traffic_lights': (1360, 1635), 'gps_path': (1635, 1655)}
+
+=================================================================
+STEP 2: Extracting scenario 002
+=================================================================
+Scenario   : s002
+Total steps: 80
+Collision  : False
+Off-road   : False
+Route compl: 0.0%
+
+=================================================================
+STEP 3: Mining events in scenario 002
+=================================================================
+Events found: 17
+  hazard_onset           sev=critical t= 28– 34 peak= 34 agent=0
+  hazard_onset           sev=critical t= 22– 27 peak= 27 agent=1
+  hazard_onset           sev=critical t= 16– 21 peak= 20 agent=2
+  hazard_onset           sev=critical t=  0– 13 peak= 12 agent=4
+  hazard_onset           sev=critical t= 72– 76 peak= 76 agent=4
+  hazard_onset           sev=medium   t= 17– 31 peak= 21 agent=5
+  hazard_onset           sev=medium   t= 13– 16 peak= 13 agent=6
+  hazard_onset           sev=critical t= 68– 71 peak= 68 agent=6
+  hazard_onset           sev=critical t= 64– 67 peak= 66 agent=7
+  near_miss              sev=critical t=  0– 79 peak= 35 agent=0
+  near_miss              sev=critical t=  0– 79 peak= 28 agent=1
+  near_miss              sev=critical t=  0– 79 peak= 48 agent=2
+  near_miss              sev=critical t=  0– 79 peak= 26 agent=3
+  near_miss              sev=critical t=  0– 79 peak= 26 agent=4
+  near_miss              sev=critical t=  0– 79 peak= 63 agent=5
+  near_miss              sev=critical t=  0– 79 peak= 64 agent=6
+  near_miss              sev=critical t=  0– 79 peak= 67 agent=7
+
+Top event for focused plots: near_miss at t=35
+
+=================================================================
+STEP 4: Initialising all 7 XAI methods
+=================================================================
+Methods: ['vanilla_gradient', 'gradient_x_input', 'integrated_gradients', 'smooth_grad', 'perturbation', 'feature_ablation', 'sarfa']
+
+=================================================================
+STEP 5: Running temporal XAI sweep
+=================================================================
+Timesteps to analyse: 17 — [0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 79]
+
+  JIT warm-up on t=0 ...
+    vanilla_gradient           warm-up: 7581 ms
+    gradient_x_input           warm-up: 969 ms
+    integrated_gradients       warm-up: 9880 ms
+    smooth_grad                warm-up: 9974 ms
+    perturbation               warm-up: 2068 ms
+    feature_ablation           warm-up: 1627 ms
+    sarfa                      warm-up: 2459 ms
+
+  Temporal sweep:
+  t=  0.......
+  t=  5.......
+  t= 10.......
+  t= 15.......
+  t= 20.......
+  t= 25.......
+  t= 30.......
+  t= 35.......
+  t= 40.......
+  t= 45.......
+  t= 50.......
+  t= 55.......
+  t= 60.......
+  t= 65.......
+  t= 70.......
+  t= 75.......
+  t= 79.......
+
+Average inference times (after JIT warm-up):
+  vanilla_gradient         : 574.1 ms/step
+  gradient_x_input         : 566.4 ms/step
+  integrated_gradients     : 791.0 ms/step
+  smooth_grad              : 752.9 ms/step
+  perturbation             : 1634.9 ms/step
+  feature_ablation         : 1644.7 ms/step
+  sarfa                    : 1687.0 ms/step
+
+=================================================================
+STEP 6: Single-timestep analysis at peak / midpoint
+=================================================================
+Using timestep t=35
+  vanilla_gradient         : sdc_trajectory=0.199, other_agents=0.510, roadgraph=0.150, traffic_lights=0.017, gps_path=0.124
+  gradient_x_input         : sdc_trajectory=0.031, other_agents=0.372, roadgraph=0.495, traffic_lights=0.031, gps_path=0.070
+  integrated_gradients     : sdc_trajectory=0.005, other_agents=0.261, roadgraph=0.689, traffic_lights=0.026, gps_path=0.018
+  smooth_grad              : sdc_trajectory=0.097, other_agents=0.407, roadgraph=0.355, traffic_lights=0.103, gps_path=0.038
+  perturbation             : sdc_trajectory=0.560, other_agents=0.205, roadgraph=0.014, traffic_lights=0.052, gps_path=0.170
+  feature_ablation         : sdc_trajectory=0.560, other_agents=0.205, roadgraph=0.014, traffic_lights=0.052, gps_path=0.170
+  sarfa                    : sdc_trajectory=0.007, other_agents=0.713, roadgraph=0.006, traffic_lights=0.078, gps_path=0.196
+
+=================================================================
+STEP 7: Deletion / insertion curves at t=35
+=================================================================
+  vanilla_gradient         : del_AUC=-0.2267  ins_AUC=0.0208
+  gradient_x_input         : del_AUC=-0.2630  ins_AUC=-0.0536
+  integrated_gradients     : del_AUC=-0.1593  ins_AUC=0.0747
+  smooth_grad              : del_AUC=-0.1953  ins_AUC=0.0894
+  perturbation             : del_AUC=-0.2109  ins_AUC=-0.3263
+  feature_ablation         : del_AUC=-0.2109  ins_AUC=-0.3263
+  sarfa                    : del_AUC=-0.1011  ins_AUC=-0.0896
+
+=================================================================
+STEP 8: Sparsity summary at t=35
+=================================================================
+  vanilla_gradient         : gini=0.951  entropy=0.555  top10=0.569
+  gradient_x_input         : gini=0.916  entropy=0.662  top10=0.388
+  integrated_gradients     : gini=0.867  entropy=0.745  top10=0.244
+  smooth_grad              : gini=0.825  entropy=0.789  top10=0.177
+  perturbation             : gini=0.870  entropy=0.716  top10=0.140
+  feature_ablation         : gini=0.870  entropy=0.716  top10=0.140
+  sarfa                    : gini=0.784  entropy=0.814  top10=0.098
+
+Summary CSV saved.
+
+=================================================================
+STEP 10: Generating plots
+=================================================================
+  Saved: experiments/scenario002_all_methods/A_temporal_category_all_methods.png
+  Saved: experiments/scenario002_all_methods/B_temporal_per_category_grid.png
+  Saved: experiments/scenario002_all_methods/C_stacked_all_methods.png
+  Saved: experiments/scenario002_all_methods/D_agent_importance_all_methods.png
+  Saved: experiments/scenario002_all_methods/E_sparsity_over_time.png
+  Saved: experiments/scenario002_all_methods/F_peak_timestep_comparison.png
+  Saved: experiments/scenario002_all_methods/G_deletion_insertion_curves.png
+  Saved: experiments/scenario002_all_methods/H_importance_heatmap.png
+
+=================================================================
+EXPERIMENT COMPLETE
+=================================================================
+
+Scenario : s002
+Steps    : 80
+Events   : 17
+Methods  : ['vanilla_gradient', 'gradient_x_input', 'integrated_gradients', 'smooth_grad', 'perturbation', 'feature_ablation', 'sarfa']
+Timesteps: 17 analysed (stride=5)
+
+Output files in experiments/scenario002_all_methods/:
+  A_temporal_category_all_methods.png                 861.3 KB
+  B_temporal_per_category_grid.png                    437.6 KB
+  C_stacked_all_methods.png                           260.0 KB
+  D_agent_importance_all_methods.png                  791.8 KB
+  E_sparsity_over_time.png                            254.1 KB
+  F_peak_timestep_comparison.png                      57.6 KB
+  G_deletion_insertion_curves.png                     264.7 KB
+  H_importance_heatmap.png                            95.9 KB
+  summary_metrics.csv                                 1.8 KB
+
+Summary metrics table:
+              method     gini  entropy  deletion_auc  insertion_auc  avg_time_ms
+    vanilla_gradient 0.950663 0.555237     -0.226661       0.020781   574.144721
+    gradient_x_input 0.915732 0.661531     -0.263023      -0.053588   566.422686
+integrated_gradients 0.867099 0.744895     -0.159320       0.074725   790.960863
+         smooth_grad 0.824763 0.788845     -0.195333       0.089424   752.944961
+        perturbation 0.869968 0.715668     -0.210859      -0.326263  1634.875134
+    feature_ablation 0.869968 0.715668     -0.210859      -0.326263  1644.712523
+               sarfa 0.783752 0.813668     -0.101096      -0.089575  1687.046155

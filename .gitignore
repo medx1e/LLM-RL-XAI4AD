@@ -1,0 +1,69 @@
+# ============== Python / Bytecode ==============
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyo
+*.pyd
+*.egg-info/
+*.egg
+dist/
+build/
+*.so
+
+# ============== Data & Models ==============
+data/
+runs_cbm/
+runs_rlc/
+*.pkl
+*.pickle
+*.npy
+*.npz
+*.tfrecord
+*.tfevents*
+events.out*
+*.h5
+*.hdf5
+*.ckpt
+*.pt
+*.pth
+
+# ============== Results & Outputs ==============
+results/
+logs/
+experiments/event_xai_results/
+experiments/scenario002_all_methods/
+*.gif
+*.mp4
+
+# ============== Environment ==============
+.env
+.venv/
+venv/
+env/
+
+# ============== Jupyter ==============
+.ipynb_checkpoints/
+*.ipynb
+
+# ============== IDE, Editor & OS Noise ==============
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+
+# ============== AI & Claude Context ==============
+claude-context/
+.claude/
+.xai_progress.md
+
+# ============== Miscellaneous / Submodules ==============
+V-Max-Concept-Bottleneck-Models-*/
+V-Max/
+patch_and_test_seed0.py
+inspect_seed0.py
+path_spatial_candidates.yaml
+path_spatial_concepts_analysis.md
+platform_cache/

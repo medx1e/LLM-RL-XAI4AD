@@ -1,0 +1,394 @@
+% RLJ main.tex Version 2026.1
+
+\documentclass[10pt]{article} % For LaTeX2e
+
+\usepackage{rlj}           % For submission (anonymous)
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Additional packages (not conflicting with rlj.sty)
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\usepackage{amssymb}
+\usepackage{mathtools}
+\usepackage{graphicx}
+\usepackage{subcaption}
+\usepackage[space]{grffile}
+\usepackage{url}
+\usepackage{booktabs}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Meta-data
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\title{Reward-Conditioned Attention: How Reward Design Shapes\\What Autonomous Driving Agents See}
+
+\setrunningtitle{Reward-Conditioned Attention in RL Driving Agents}
+
+\author{Anonymous Authors}
+
+\emails{anonymous@anonymous.org}
+
+\affiliations{
+$^{1}$\textbf{Anonymous Institution}
+}
+
+% ── Contributions ─────────────────────────────────────────────
+
+\contribution{
+    Empirical evidence that reward design in RL-trained autonomous driving agents predictably shapes the Perceiver encoder's cross-attention allocation: navigation rewards increase GPS-path attention by 3.4$\times$, and continuous time-to-collision penalties elevate a learned vigilance prior (+134\% resting agent attention during collision-free phases).
+    }
+    {
+    Results are based on a single encoder architecture (Perceiver/Latent-Query) within the V-Max framework. Cross-model comparisons currently rest on 3 overlapping scenarios; a 50-scenario replication on the minimal model is pending. Findings are correlational; causal intervention experiments are not performed.
+    }
+
+\contribution{
+    A methodological correction for attention-based XAI in RL: naive cross-episode pooling confounds within-episode attention--risk correlations by 3.3$\times$. We propose within-episode Spearman correlation with Fisher z-transform aggregation as the appropriate statistic for heterogeneous RL episodes.
+    }
+    {
+    The within-episode approach requires sufficient risk variability within individual episodes, restricting analysis to a subset of scenarios (31 of 50 in our study). The method is demonstrated on a single domain (autonomous driving) and a single attention mechanism (Perceiver cross-attention).
+    }
+
+\contribution{
+    Per-scenario analysis reveals that approximately 20\% of high-variation scenarios exhibit reversed attention--risk correlations, demonstrating genuine attentional heterogeneity that aggregate metrics conceal.
+    }
+    {
+    The causes of reversed correlations (committed maneuvers, lane changes, geometric configurations) are hypothesized but not formally investigated.
+    }
+
+\keywords{Explainable AI, reinforcement learning, autonomous driving, attention mechanisms, reward shaping.}
+
+\summary{
+Understanding what reinforcement learning (RL) agents attend to is a prerequisite for deploying them in safety-critical domains. We study how reward design shapes the cross-attention patterns of Perceiver-based driving agents trained in the V-Max framework on 50 real-world scenarios from the Waymo Open Motion Dataset. Three reward configurations---basic (violation penalties only), minimal (adding navigation incentives), and complete (adding continuous time-to-collision penalties)---share the same architecture and training data, isolating the effect of reward on learned attention.
+
+We first establish that within-episode Spearman correlation between collision risk and agent-directed attention is robustly positive (mean $\rho{=}+0.291$, 95\% CI $[+0.125, +0.442]$), while naive cross-episode pooling yields a confounded estimate 3.3$\times$ smaller ($\rho{=}+0.088$)---a methodological pitfall we address with Fisher z-transform aggregation. Building on this validated methodology, two findings emerge. First, GPS-path attention tracks navigation reward content monotonically across the three configurations (3.4$\times$ variation). Second, continuous proximity penalties produce a learned vigilance prior: elevated agent attention maintained even during collision-free phases. Approximately 20\% of high-variation scenarios exhibit reversed correlations, revealing genuine attentional heterogeneity. These results demonstrate that reward design predictably shapes encoder attention and that within-episode analysis is essential for detecting this relationship.
+}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Begin document
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{document}
+
+\makeCover
+\maketitle
+
+\begin{abstract}
+We investigate how reward design shapes the cross-attention patterns of reinforcement learning agents trained for autonomous driving. Using three Perceiver-based agents with identical architectures but different reward configurations---ranging from basic violation penalties to continuous time-to-collision (TTC) rewards---we analyze attention allocation across 50 real-world driving scenarios (3,676 timesteps) in the V-Max/Waymax framework. We first establish that within-episode Spearman correlation between collision risk and agent-directed attention is robustly positive (mean $\rho{=}+0.291$, 95\% CI $[+0.125, +0.442]$), while naive cross-episode pooling confounds this estimate by 3.3$\times$---a methodological pitfall we address with Fisher z-transform aggregation. Building on this validated methodology, we show that navigation reward terms increase GPS-path attention by 3.4$\times$ across reward configurations, and that continuous TTC penalties elevate a learned vigilance prior---resting agent attention maintained during collision-free phases. Approximately 20\% of scenarios exhibit reversed attention--risk relationships, underscoring the importance of per-scenario analysis over aggregate summaries.
+\end{abstract}
+
+
+% ══════════════════════════════════════════════════════════════
+\section{Introduction}
+\label{sec:intro}
+% ══════════════════════════════════════════════════════════════
+
+Reinforcement learning (RL) has demonstrated strong potential for autonomous driving (AD), with recent work achieving expert-level accuracy in closed-loop simulation \citep{charraut2025vmax, cusumano2025robust}. However, deploying RL-trained driving policies requires understanding \textit{what} these agents have learned to attend to and \textit{why}. While the ``attention is not explanation'' debate \citep{jain2019attention, wiegreffe2019attention} has established that attention weights are not necessarily faithful indicators of model reasoning, a distinct and complementary question remains underexplored: does the \textit{reward function} used during training predictably shape what the encoder attends to?
+
+This question matters for two reasons. First, if reward design systematically influences attention patterns, practitioners can use attention analysis as a diagnostic tool to verify that their reward function teaches the agent to monitor the right aspects of the driving scene. Second, understanding how different reward components shape internal representations informs principled reward engineering---a central challenge in RL for AD \citep{kiran2022deep}.
+
+We study this question in the V-Max framework \citep{charraut2025vmax}, which provides transformer-based driving agents trained with Soft Actor-Critic (SAC) \citep{haarnoja2018sac} on the Waymo Open Motion Dataset (WOMD) \citep{ettinger2021womd}. The Perceiver encoder \citep{jaegle2021perceiver} used in V-Max processes 280 input tokens---representing the ego vehicle, other agents, road geometry, traffic lights, and GPS route waypoints---through cross-attention layers, producing an explicit attention distribution over all scene elements at every timestep. By comparing three reward configurations (basic, minimal, complete) that share the same architecture and training data, we isolate the effect of reward design on learned attention patterns.
+
+Our analysis yields a methodological contribution and two findings, presented in order of evidential robustness rather than conceptual importance---ensuring credibility on the full 50-scenario dataset before introducing the smaller-sample cross-model results.
+
+\begin{enumerate}[leftmargin=*]
+    \item \textbf{Methodological foundation: within-episode correlation.} We establish that within-episode Spearman correlation between collision risk and agent-directed attention is robustly positive across 31 high-variation scenarios (mean $\rho{=}+0.291$, 80.6\% individually significant). Crucially, naive pooling across episodes yields $\rho{=}+0.088$---a 3.3$\times$ underestimate due to between-scenario heterogeneity. This validated methodology enables the findings that follow.
+    
+    \item \textbf{Finding 1: Reward content directly shapes attention baselines.} GPS-path attention follows navigation reward content monotonically: 0.092 without navigation reward, 0.166 with navigation plus TTC, and 0.314 with navigation reward alone.
+    
+    \item \textbf{Finding 2: Continuous safety rewards create a vigilance prior.} Models trained with TTC-based proximity penalties maintain elevated agent attention even during collision-free phases (+134\% relative to models without TTC), suggesting the reward shapes a learned resting posture rather than merely amplifying reactive responses.
+\end{enumerate}
+
+We also identify methodological implications for the XAI community: within-episode correlation with Fisher z-transform aggregation \citep{fisher1921probable} is the appropriate statistic for attention analysis across heterogeneous RL episodes, and per-scenario analysis reveals substantial attentional heterogeneity (${\sim}$20\% of scenarios show reversed correlations) that aggregate metrics conceal.
+
+
+% ══════════════════════════════════════════════════════════════
+\section{Related Work}
+\label{sec:related}
+% ══════════════════════════════════════════════════════════════
+
+\textbf{Reinforcement learning for autonomous driving.}
+RL has gained traction in mid-to-end AD, where agents process structured scene representations rather than raw sensor data. V-Max \citep{charraut2025vmax} extends the Waymax simulator \citep{gulino2023waymax} with a JAX-based training pipeline, multiple encoder architectures, and comprehensive evaluation tools. Its benchmark showed that SAC agents achieve 97.86\% accuracy on the WOMD validation set, approaching expert-level performance. \citet{lu2023imitation} showed that combining imitation learning with RL improves robustness in corner cases, while \citet{cusumano2025robust} demonstrated that self-play produces highly robust policies. The nuPlan challenge \citep{karnchanachari2024nuplan} highlighted that rule-based methods like PDM \citep{dauner2023pdm} outperformed all learning-based approaches, motivating further RL research. V-Max provides hierarchical reward structures (safety $\to$ navigation $\to$ behavior) that produce qualitatively different driving policies---we show these also produce qualitatively different attention patterns.
+
+\textbf{Attention as explanation.}
+The debate over whether attention weights constitute valid explanations has been extensively studied. \citet{jain2019attention} found that attention weights are frequently uncorrelated with gradient-based feature importance and that alternative attention distributions can yield equivalent predictions. \citet{wiegreffe2019attention} challenged these conclusions, showing that attention can be informative when properly validated. In RL, \citet{greydanus2018visualizing} used perturbation-based saliency maps to visualize Atari agent behavior, \citet{gupta2020sarfa} proposed SARFA for action-specific attribution, and \citet{atrey2020exploratory} cautioned that saliency maps in RL are often exploratory rather than explanatory. Our work sidesteps the faithfulness debate: we do not claim attention \textit{explains} decisions, but rather ask whether reward design \textit{shapes} attention patterns---a question about learned representations rather than post-hoc explanation.
+
+\textbf{Transformer architectures in driving.}
+Transformer-based encoders are now standard in motion forecasting and planning \citep{vaswani2017attention, nayakanti2023wayformer, shi2024mtr}. \citet{bronstein2022hierarchical} used hierarchical attention in imitation learning for AD. The Perceiver architecture \citep{jaegle2021perceiver}, used in V-Max's Latent-Query (LQ) encoder, processes heterogeneous inputs through cross-attention with learned latent queries. This architecture makes attention weights directly interpretable as an allocation of processing resources across semantically distinct scene elements---a property we exploit throughout our analysis.
+
+\textbf{Reward shaping.}
+Reward design is a long-standing challenge in RL \citep{sutton2018reinforcement}. In AD, V-Max demonstrated that hierarchical reward structures produce qualitatively different policies \citep{charraut2025vmax}. \citet{grislain2024igdrivsim} showed that incorporating RL objectives mitigates the imitation gap in mid-to-end AD. Our work extends the understanding of reward shaping by showing that rewards change not only \textit{what the agent does} but also \textit{what it looks at}---and that these attentional effects are measurable and semantically coherent.
+
+
+% ══════════════════════════════════════════════════════════════
+\section{Method}
+\label{sec:method}
+% ══════════════════════════════════════════════════════════════
+
+\subsection{Models and Reward Configurations}
+\label{sec:models}
+
+We study three SAC agents trained in V-Max with the Latent-Query (LQ) encoder---a Perceiver-based architecture---on the WOMD training set. All three models, made publicly available by \citet{charraut2025vmax}, share the same architecture, seed (42), and training data; they differ only in their reward terms:
+
+\begin{table}[ht]
+    \caption{Reward configurations. Each successive configuration is a strict superset of the previous one, enabling controlled comparison of reward component effects.}
+    \label{tab:rewards}
+    \begin{center}
+    \begin{tabular}{llp{5.5cm}}
+        \toprule
+        \textbf{Configuration} & \textbf{Reward Terms} & \textbf{Key Addition} \\
+        \midrule
+        Basic & collision, offroad, red-light & Violation penalties only \\
+        Minimal & + off-route, progression & Navigation incentive \\
+        Complete & + TTC($\tau{=}1.5$s), speed, comfort & Continuous proximity penalty \\
+        \bottomrule
+    \end{tabular}
+    \end{center}
+\end{table}
+
+The complete model achieves 97.86\% accuracy on WOMD validation; the basic model crashes in approximately 40\% of scenarios due to the absence of navigation incentives. These performance differences are well-documented in the V-Max benchmark \citep{charraut2025vmax}.
+
+\subsection{Attention Extraction}
+\label{sec:attention}
+
+The LQ encoder processes 280 input tokens through 4 cross-attention layers with 16 learned latent queries, 2 heads per layer, and head dimension $d_k{=}16$. At each timestep, we extract cross-attention weights from the first layer by reconstructing the attention matrix from the query ($Q$) and key ($K$) projections:
+\begin{equation}
+    \mathbf{A} = \mathrm{softmax}\!\left(\frac{QK^\top}{\sqrt{d_k}}\right), \quad \mathbf{A} \in \mathbb{R}^{n_\mathrm{heads} \times n_\mathrm{queries} \times n_\mathrm{tokens}}.
+\end{equation}
+We average over heads and queries to obtain a single attention distribution over the 280 tokens, then aggregate into five semantic categories by summing over the corresponding token ranges:
+
+\begin{table}[ht]
+    \caption{Token structure of the LQ encoder input (280 tokens total).}
+    \label{tab:tokens}
+    \begin{center}
+    \begin{tabular}{lcl}
+        \toprule
+        \textbf{Category} & \textbf{Token Indices (Count)} & \textbf{Content} \\
+        \midrule
+        Ego (SDC) & 0--4 \hspace{0.5em}(5) & Ego vehicle $\times$ 5 timesteps \\
+        Other Agents & 5--44 \hspace{0.3em}(40) & 8 nearest agents $\times$ 5 timesteps \\
+        Road Graph & 45--244 (200) & 200 sampled road points \\
+        Traffic Lights & 245--269 (25) & 5 lights $\times$ 5 timesteps \\
+        GPS Path & 270--279 (10) & 10 route waypoints \\
+        \bottomrule
+    \end{tabular}
+    \end{center}
+\end{table}
+
+The five category-level fractions sum to exactly 1.0 at every timestep (verified across all 3,676 timesteps with zero violations), representing a normalized attentional budget. This budget-constraint property is critical: an increase in one category necessarily entails a decrease in others, enabling us to study \textit{reallocation} patterns.
+
+\subsection{Risk Metric}
+\label{sec:risk}
+
+We compute a continuous collision risk metric from the simulation state at each timestep:
+\begin{equation}
+    \mathrm{collision\_risk} = \mathrm{clip}\!\left(1 - \frac{\min(\mathrm{TTC})}{3.0},\ 0,\ 1\right),
+\end{equation}
+where TTC is the time-to-collision with the nearest agent. A value of 0 indicates no imminent risk ($\mathrm{TTC} \geq 3$s), and 1 indicates imminent collision ($\mathrm{TTC}{=}0$).
+
+\subsection{Within-Episode Correlation with Fisher Z-Transform}
+\label{sec:fisher}
+
+The central methodological choice in our analysis is to compute correlations \textit{within} each episode rather than pooling all timesteps across episodes.
+
+\textbf{Why within-episode?} Naive pooling conflates two sources of variation: (1)~the within-episode mechanism of interest---does attention shift when risk changes during a single drive?---and (2)~between-episode differences in baseline risk and attention levels, arising because urban scenarios have systematically different risk profiles and attention patterns than suburban ones. Episodes with near-constant risk (19 of 50 scenarios have $\mathrm{std}(\mathrm{collision\_risk}) < 0.2$) contribute timesteps but no detectable signal, further diluting the pooled estimate.
+
+We use Spearman rank correlation $\rho_i$ between collision risk and agent attention for each scenario $i$ separately, filter to high-variation (HV) scenarios ($\mathrm{std} > 0.2$, $n{=}31$), and aggregate using the Fisher z-transform \citep{fisher1921probable}:
+\begin{equation}
+    z_i = \mathrm{arctanh}(\rho_i), \quad \bar{z} = \frac{1}{n}\sum_{i=1}^{n} z_i, \quad \bar{\rho} = \mathrm{tanh}(\bar{z}).
+\end{equation}
+The z-transform maps $\rho$ values (which are compressed near $\pm1$) onto an approximately normal scale with known variance $\approx 1/(n_i - 3)$, enabling proper averaging and confidence interval construction.
+
+% ══════════════════════════════════════════════════════════════
+\section{Experiments}
+\label{sec:experiments}
+% ══════════════════════════════════════════════════════════════
+
+\subsection{Setup}
+
+We evaluate the complete model on 50 scenarios from the WOMD training set (3,676 timesteps; 8 early terminations due to collisions or off-road events). The minimal and basic models are evaluated on 3 overlapping scenarios for cross-model comparison. At each timestep, we record the five category-level attention fractions, collision risk, ego actions (acceleration, steering), and scene metadata (number of valid agents, collision/off-road flags). All simulations run at 10~Hz for up to 80~timesteps (8 seconds of driving after a 1-second log-replay warm-up).
+
+\subsection{Establishing the Methodology: Within-Episode Attention Tracks Collision Risk}
+\label{sec:methodology_validation}
+
+Across 31 high-variation scenarios, within-episode Spearman correlation between collision risk and agent attention is consistently positive (Table~\ref{tab:correlations}). We present this result first not because it is the most conceptually interesting finding, but because it establishes---on the full 50-scenario dataset---that within-episode attention analysis is a valid and reliable methodology. This evidential foundation is necessary before the cross-model comparisons (Findings~1 and~2), which currently rest on fewer scenarios.
+
+\begin{table}[ht]
+    \caption{Within-episode correlations (complete model, 31 HV scenarios). Mean $\rho$ and 95\% CI computed via Fisher z-transform. ``Sig.\ \%'' is the fraction of individual scenario correlations that are statistically significant at $p < 0.05$.}
+    \label{tab:correlations}
+    \begin{center}
+    \begin{tabular}{lccc}
+        \toprule
+        \textbf{Pair} & \textbf{Mean $\rho$} & \textbf{95\% CI} & \textbf{Sig.\ \%} \\
+        \midrule
+        collision\_risk $\times$ attn\_agents     & $+0.291$ & $[+0.125, +0.442]$ & 80.6\% \\
+        collision\_risk $\times$ attn\_roadgraph  & $-0.148$ & $[-0.287, -0.003]$ & 67.7\% \\
+        \bottomrule
+    \end{tabular}
+    \end{center}
+\end{table}
+
+The confidence interval for agent attention is entirely above zero. The road graph shows a complementary negative correlation: attention shifts \textit{from} static road geometry \textit{toward} dynamic agents when collision risk rises. This bidirectional reallocation is semantically coherent---the model prioritizes dynamic threats over static infrastructure under danger.
+
+\textbf{The pooling confound.} Naive pooling across all 3,676 timesteps gives $\rho{=}+0.088$ ($p < 0.0001$)---a 3.3$\times$ underestimate. The gap arises because 19 low-variation scenarios contribute timesteps but no detectable signal, and because between-scenario baseline differences in both risk and attention create a confound. This is our core methodological finding: pooled analysis is misleading for heterogeneous RL episodes.
+
+\textbf{Agent-count confound check.} A concern is that higher collision risk simply coincides with more nearby agents, mechanically increasing agent attention. We compute partial correlation controlling for the number of valid agents: raw $\rho{=}+0.262$, partial $\rho{=}+0.247$ ($\Delta{=}-0.014$). The confound is negligible.
+
+\textbf{Counter-examples.} Approximately 20\% of HV scenarios show reversed correlations ($\rho < 0$), including s009 ($\rho{=}-0.383$) and s031 ($\rho{=}-0.559$). These are not noise---they reflect genuine attentional heterogeneity in which the agent maintains or increases attention to road geometry during dangerous phases. Figure~\ref{fig:budget} contrasts the attention budget reallocation in typical positive-correlation scenarios with two such counter-examples.
+
+% ── FIGURE: Per-scenario budget reallocation ──
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=\linewidth]{figures/fig_budget_reallocation.png}
+    \caption{Per-scenario attention budget under low risk ($<0.2$) vs.\ high risk ($>0.7$). \textbf{Top row}: risk-reactive scenarios (positive $\rho$) showing agent attention increases of 2--6 percentage points under threat, with corresponding road graph decreases. \textbf{Bottom row}: counter-examples (negative $\rho$) where agent attention does not increase (s031) or decreases (s013) under high risk. The $\rho$ value shown is the within-episode Spearman correlation between collision risk and agent attention.}
+    \label{fig:budget}
+\end{figure}
+
+
+\subsection{Finding 1: Reward Content Shapes Attention Baselines}
+\label{sec:finding1}
+
+Comparing the three reward configurations on the same scenario reveals that attention baselines directly track reward content (Figure~\ref{fig:3way}).
+
+\textbf{GPS attention gradient.} The fraction of attention allocated to GPS route tokens follows a strict monotonic ordering across reward configurations: minimal (0.314) $>$ complete (0.166) $>$ basic (0.092). The minimal model, which receives the strongest navigation incentive relative to its total reward budget, allocates the most attention to GPS. Adding TTC penalties (complete) diverts some attention budget from GPS toward agents. Removing navigation rewards entirely (basic) renders GPS nearly irrelevant to the agent.
+
+\textbf{Agent attention baseline.} The basic model, despite having the simplest reward, allocates the highest baseline agent attention (0.264). Without GPS or navigation-related information to attend to, agents and road geometry become the only informative inputs. Adding navigation rewards (minimal) shifts budget toward GPS and away from agents (0.117). The complete model, with both navigation and TTC terms, falls between these extremes (0.173).
+
+% ── FIGURE: 3-way comparison ──
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=\linewidth]{figures/fig_3way_comparison_s002.png}
+    \caption{Attention timeseries for three reward configurations on scenario s002. GPS attention (top traces) tracks navigation reward content monotonically: minimal ($0.314$) $>$ complete ($0.166$) $>$ basic ($0.092$). Agent attention (bottom traces) shows the inverse ordering. The collision risk profile (bottom panel) shows two distinct risk peaks separated by a calm phase, enabling within-episode analysis.}
+    \label{fig:3way}
+\end{figure}
+
+
+\subsection{Finding 2: TTC Reward Creates a Vigilance Prior}
+\label{sec:finding2}
+
+The most conceptually important finding concerns the \textit{resting} level of agent attention during collision-free phases. Comparing the complete model (with TTC reward) to the minimal model (without TTC) on scenario s002, the gap in agent attention is present from $t{=}0$---before any danger appears---and persists through the calm phase ($t{=}42$--$65$, collision risk ${\approx}0$):
+
+\begin{table}[ht]
+    \caption{Calm-phase agent attention (s002, timesteps with collision risk $< 0.2$).}
+    \label{tab:vigilance}
+    \begin{center}
+    \begin{tabular}{lcc}
+        \toprule
+        \textbf{Model} & \textbf{Calm-phase attn\_agents} & \textbf{Episode mean attn\_agents} \\
+        \midrule
+        Complete (with TTC) & 0.146 & 0.173 \\
+        Minimal (no TTC) & 0.063 & 0.117 \\
+        \midrule
+        \textbf{Gap} & \textbf{+134\%} & \textbf{+48\%} \\
+        \bottomrule
+    \end{tabular}
+    \end{center}
+\end{table}
+
+This is not a reactive effect. The TTC penalty is a \textit{continuous} reward signal that fires whenever TTC drops below 1.5 seconds---not only at collision. This trains persistent agent surveillance: the model learns that other agents are permanently relevant, even in currently safe situations. We term this a \textit{vigilance prior}: a learned resting attentional posture shaped by reward design.
+
+% ── FIGURE: Vigilance gap ──
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=\linewidth]{figures/fig_vigilance_gap_s000_s002.png}
+    \caption{Vigilance gap between complete (with TTC) and minimal (without TTC) models. Agent attention timeseries are shown for two scenarios. Green shading marks calm phases (collision risk $< 0.2$). The gap is strongly present on s002 (+134\% during calm phases) but absent on s000, indicating scenario dependence.}
+    \label{fig:vigilance}
+\end{figure}
+
+\textbf{Caveats.} The complete and minimal models face partially different risk experiences on the same scenarios (Spearman $\rho$ between their risk profiles: 0.01 on s000, 0.67 on s002), because their different policies lead to different ego trajectories. The vigilance gap is therefore a property of each model's learned attentional posture rather than a controlled comparison of responses to identical stimuli. Furthermore, the gap is strongly confirmed on s002 but absent on s000, indicating scenario dependence that requires validation at the 50-scenario scale.
+
+
+\subsection{Supplementary Analysis: Attention Entropy Under Risk}
+
+We compute Shannon entropy over the five attention categories at each timestep: $H_t = -\sum_c p_c \log_2 p_c$, where $p_c$ is the attention fraction for category $c$. Within-episode correlation between collision risk and entropy is modestly positive (mean $\rho{=}+0.199$ across HV scenarios), and mean entropy is higher in dangerous phases ($H{=}1.803$ bits) than calm phases ($H{=}1.770$ bits, $p < 0.0001$). This indicates that the model \textit{diversifies} its attention under threat rather than narrowing focus, consistent with the safety-aware reallocation observed in Finding~1. Per-scenario heterogeneity is high (s002: $\rho{=}+0.76$; s000: $\rho{=}-0.42$), suggesting this effect interacts with scenario structure.
+
+
+% ══════════════════════════════════════════════════════════════
+\section{Discussion}
+\label{sec:discussion}
+% ══════════════════════════════════════════════════════════════
+
+\textbf{Reward shapes representations, not just behavior.} Our results demonstrate that reward design in RL does not merely change what the agent \textit{does}---it changes what the agent \textit{looks at}. GPS attention tracks navigation reward content with a 3.4$\times$ range across configurations, and TTC-based proximity penalties produce a measurable vigilance prior. This suggests that attention analysis can serve as a practical diagnostic: if a reward function is intended to promote safety awareness, one can verify that the encoder allocates elevated attention to dynamic agents.
+
+\textbf{Within-episode analysis is essential.} The 3.3$\times$ gap between pooled ($\rho{=}+0.088$) and within-episode ($\rho{=}+0.291$) estimates has broad methodological implications. Analyses that pool observations across heterogeneous RL episodes risk underestimating---or entirely missing---meaningful attention--environment relationships. We recommend within-episode correlation with Fisher z-transform aggregation as a standard practice whenever attention is analyzed across RL trajectories.
+
+\textbf{Counter-examples are informative.} The approximately 20\% of scenarios with reversed attention--risk correlations are the most analytically interesting cases, not failures. Investigating what distinguishes these scenarios---committed maneuvers, lane changes, or geometric constraints that make road geometry more relevant than nearby agents---is a promising direction for future work. Reporting only mean $\rho$ without acknowledging this heterogeneity would be incomplete.
+
+\textbf{Attention as representation, not explanation.} We deliberately frame our analysis as studying \textit{reward-conditioned representations} rather than claiming attention \textit{explains} decisions. Following the distinction drawn by \citet{jain2019attention} and \citet{wiegreffe2019attention}, attention weights may not faithfully reflect the causal chain from input to output. Our claim is narrower and distinct: reward design shapes the \textit{distribution} of attention across input categories in a predictable and semantically coherent manner.
+
+\textbf{Limitations.} (1) All models use the same Perceiver/LQ architecture; generalization to Wayformer \citep{nayakanti2023wayformer} or MTR \citep{shi2024mtr} encoders is untested. (2)~The cross-model comparison (Findings 2 and 3) currently rests on 3 scenarios for the minimal and basic models; a 50-scenario replication is in progress. (3)~We do not perform causal interventions (e.g., ablating attention to specific token groups)---our findings are correlational. (4)~The 5-category aggregation is coarse; finer-grained analysis at the individual-agent level may reveal additional structure.
+
+
+% ══════════════════════════════════════════════════════════════
+\section{Conclusion}
+\label{sec:conclusion}
+% ══════════════════════════════════════════════════════════════
+
+We have shown that reward design in RL-trained autonomous driving agents predictably shapes the Perceiver encoder's cross-attention allocation. Using within-episode correlation---validated as a reliable methodology across 50 real-world driving scenarios---we demonstrate that GPS attention tracks navigation reward content monotonically and that continuous proximity penalties produce a learned vigilance prior. The 3.3$\times$ gap between pooled and within-episode correlation estimates highlights a methodological pitfall relevant to the broader XAI community. Future work should replicate the cross-model findings at the 50-scenario scale, investigate the structural causes of counter-example scenarios, and test whether reward-conditioned attention patterns generalize across encoder architectures and driving domains.
+
+\subsubsection*{Broader Impact Statement}
+\label{sec:broaderImpact}
+This work contributes to the transparency of RL-based autonomous driving agents by providing tools to verify that reward functions produce the intended attentional behavior. Improved understanding of RL agent internals may accelerate deployment of autonomous systems; however, attention-based analysis should complement---not substitute for---rigorous safety testing and validation.
+
+
+% ══════════════════════════════════════════════════════════════
+% Appendices
+% ══════════════════════════════════════════════════════════════
+\appendix
+
+\section{Scenario Selection and Filtering}
+\label{sec:app_scenarios}
+
+Of 50 scenarios evaluated with the complete model, 31 pass the high-variation filter ($\mathrm{std}(\mathrm{collision\_risk}) > 0.2$). Effective scenarios for within-episode correlation analysis require risk variability with both calm and dangerous phases. We found that raw event count (total detected collision/offroad/violation events) is not a reliable proxy for analytical value: the scenario with the highest event count (48) had near-constant maximum risk, rendering it uninformative for correlation analysis. We recommend selecting scenarios based on risk standard deviation and the presence of multiple risk cycles.
+
+\section{Cross-Model Risk-Reactivity}
+\label{sec:app_crossmodel}
+
+On the overlapping scenario s002, all three models show strong positive within-episode correlations between collision risk and agent attention, indicating risk-reactive attention is a general property of collision-avoidance training:
+
+\begin{table}[ht]
+    \caption{Within-episode $\rho(\mathrm{risk}, \mathrm{attn\_agents})$ on s002 across reward configurations. $^{**}$: $p < 0.01$.}
+    \begin{center}
+    \begin{tabular}{lcc}
+        \toprule
+        \textbf{Model} & $\rho$ & \textbf{Episode length} \\
+        \midrule
+        Complete (TTC) & $+0.769^{**}$ & 80 timesteps \\
+        Minimal (no TTC) & $+0.765^{**}$ & 80 timesteps \\
+        Basic (violations only) & $+0.990^{**}$ & 39 timesteps (early termination) \\
+        \bottomrule
+    \end{tabular}
+    \end{center}
+\end{table}
+
+What differs between models is the \textit{baseline level} from which the reactive response occurs and the \textit{survival rate}: the basic model crashes in 2 of 3 evaluated scenarios.
+
+\textbf{Road graph compensation.} Without GPS route guidance, the basic model compensates by allocating substantially more attention to road geometry (0.476 vs.\ 0.419 for complete and 0.402 for minimal on s002). During braking, 72\% of the basic model's attention budget goes to road graph, compared to approximately 42\% for the complete model.
+
+
+% ══════════════════════════════════════════════════════════════
+% References
+% ══════════════════════════════════════════════════════════════
+
+\bibliography{main}
+\bibliographystyle{rlj}
+
+% ══════════════════════════════════════════════════════════════
+% Supplementary Materials
+% ══════════════════════════════════════════════════════════════
+
+\beginSupplementaryMaterials
+
+\section{Attention Budget Verification}
+The softmax-normalized attention weights sum to exactly 1.0 at every timestep across all 3,676 observations. We verified this programmatically with a tolerance of $10^{-6}$ and found zero violations. This invariant confirms that our 5-category aggregation correctly represents a closed budget system.
+
+\section{Entropy Analysis Details}
+Shannon entropy is computed over the five attention categories: $H_t = -\sum_{c=1}^{5} p_c \log_2 p_c$, where $p_c$ is the attention fraction for category $c$. Theoretical range is $[0, \log_2 5] = [0, 2.322]$ bits. Observed range across all timesteps is $[0.91, 2.19]$ bits.
+
+Within-episode correlation between collision risk and entropy:
+\begin{itemize}[leftmargin=*]
+    \item Mean across HV scenarios: $\rho = +0.199$
+    \item Calm-phase mean entropy: $H = 1.770$ bits
+    \item Danger-phase mean entropy: $H = 1.803$ bits ($p < 0.0001$, Mann-Whitney U)
+\end{itemize}
+
+The positive direction (entropy \textit{increases} with risk) was initially unexpected, as one might predict that the model would narrow focus under threat. Instead, the increase reflects the bidirectional reallocation documented in Finding~1: attention shifts from the dominant road-graph category toward the smaller agent category, producing a more uniform distribution and thus higher entropy.
+
+\end{document}

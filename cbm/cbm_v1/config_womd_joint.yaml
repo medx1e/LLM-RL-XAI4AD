@@ -1,0 +1,53 @@
+# CBM-V1 Joint-Encoder Training Config — WOMD single GPU
+#
+# End-to-end fine-tuning: unfreezes the encoder.
+# Initialised from the frozen CBM checkpoint.
+#
+# Runtime:  single GTX 1660 Ti (6 GB)
+# Dataset:  data/training.tfrecord  (~951 MB WOMD sample)
+# Steps:    2,000,000
+
+# ── Paths ─────────────────────────────────────────────────────────────
+# Points to our Phase 1 frozen run (now with .hydra config + symlink)
+pretrained_dir: "cbm_model/cbm_v1_frozen_womd_42"
+data_path:      "data/training.tfrecord"
+output_dir:     "runs_cbm"
+run_name:       "cbm_v1_joint_womd_42"
+
+# ── Type remapping ────────────────────────────────────────────────────
+encoder_remap:
+  perceiver: lq
+obs_type_remap:
+  road: vec
+  lane: vec
+
+# ── CBM architecture ──────────────────────────────────────────────────
+mode:           "joint"    # unfreeze the encoder for end-to-end learning
+num_concepts:   11
+lambda_concept: 0.1        # balance task reward vs concept supervision
+
+# ── Parallelism / batch structure ─────────────────────────────────────
+num_parallel_envs:   1
+num_episodes_per_env: 4
+
+# ── Training schedule ─────────────────────────────────────────────────
+scan_length:      320      # large scan for high GPU utilization
+scenario_length:   80
+unroll_length:      1
+total_timesteps: 2_000_000
+
+# ── SAC hyperparameters ───────────────────────────────────────────────
+alpha:              0.2
+discount:           0.99
+tau:                0.005
+learning_rate:      0.0001
+batch_size:         32
+grad_updates_per_step: 2
+buffer_size:      200_000
+learning_start:    2000
+
+# ── Logging / checkpointing ───────────────────────────────────────────
+log_freq:    10
+save_freq:   500           # save checkpoint roughly every 160k steps
+seed:        42
+disable_tqdm: false

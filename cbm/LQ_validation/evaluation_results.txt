@@ -1,0 +1,32 @@
+==================================================
+Evaluation - 1024 scenarios :
+==================================================
+Metric                                   Value
+----------------------------------------------
+episode_length                        77.04102
+accuracy                               0.92090
+at_fault_collision                     0.02148
+comfort                                0.60254
+distance_into_oncoming_traffic         0.43730
+nuplan_driving_direction_compliance    0.96338
+log_divergence                         4.03245
+offroad                                0.03711
+distance_on_multiple_lanes            10.18652
+time_on_multiple_lanes                 1.60918
+multiple_lanes_score                   0.85596
+overlap                                0.04102
+progress_ratio                         0.78397
+making_progress                        0.87891
+run_red_light                          0.00098
+sdc_off_route                          0.01198
+sdc_progression                        1.02317
+sdc_wrongway                           0.02405
+max_overspeed_m_per_s                  0.04972
+max_overspeed_km_per_h                 0.17898
+nuplan_speed_compliance                0.99557
+min_ttc                                4.10820
+average_ttc                            4.83724
+ttc_within_bound                       0.96387
+nuplan_aggregate_score                 0.73655
+vmax_aggregate_score                   0.73110
+accuracy_only_at_fault                 0.94043

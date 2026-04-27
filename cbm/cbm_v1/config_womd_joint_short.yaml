@@ -1,0 +1,41 @@
+# CBM-V1 JOINT SHORT — smoke test for joint (end-to-end) mode
+# Initialises from the frozen CBM checkpoint and unfreezes the encoder.
+# Runs for 500 steps to verify the joint training stack works end-to-end.
+# Use this before committing to a full 2M-step joint run.
+
+pretrained_dir: "cbm_model/cbm_v1_frozen_womd_42"
+data_path:      "data/training.tfrecord"
+output_dir:     "runs_cbm"
+run_name:       "cbm_v1_joint_short_verify"
+
+encoder_remap:
+  perceiver: lq
+obs_type_remap:
+  road: vec
+  lane: vec
+
+mode:           "joint"    # encoder is UNFROZEN — full end-to-end training
+num_concepts:   11
+lambda_concept: 0.1
+
+num_parallel_envs:   1
+num_episodes_per_env: 2   # reduced for 6GB VRAM — teammate should restore to 4+ on better GPU
+
+scan_length:        10
+scenario_length:    80
+unroll_length:       1
+total_timesteps:   500    # ~50 iters — enough to verify stack, not to learn
+
+alpha:              0.2
+discount:           0.99
+tau:                0.005
+learning_rate:      0.0001
+batch_size:         32
+grad_updates_per_step: 2
+buffer_size:       10_000
+learning_start:     200
+
+log_freq:    1
+save_freq:   10
+seed:        42
+disable_tqdm: false

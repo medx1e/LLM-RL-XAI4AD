@@ -1,0 +1,375 @@
+{
+  "model": "cbm_scratch_v2_lambda05",
+  "n_total": 400,
+  "top_k": 10,
+  "archetypes": {
+    "red_light_stop": [
+      {
+        "rank": 1,
+        "local_idx": 246,
+        "scenario_idx": 246,
+        "score": 0.949069082736969,
+        "progress": 1.0,
+        "no_at_fault": true,
+        "episode_done": false
+      },
+      {
+        "rank": 2,
+        "local_idx": 198,
+        "scenario_idx": 198,
+        "score": 0.9389161467552185,
+        "progress": 1.0,
+        "no_at_fault": true,
+        "episode_done": false
+      },
+      {
+        "rank": 3,
+        "local_idx": 329,
+        "scenario_idx": 329,
+        "score": 0.9290741086006165,
+        "progress": 1.0,
+        "no_at_fault": true,
+        "episode_done": false
+      },
+      {
+        "rank": 4,
+        "local_idx": 307,
+        "scenario_idx": 307,
+        "score": 0.9243775010108948,
+        "progress": 1.0,
+        "no_at_fault": true,
+        "episode_done": false
+      },
+      {
+        "rank": 5,
+        "local_idx": 137,
+        "scenario_idx": 137,
+        "score": 0.9235088229179382,
+        "progress": 1.0,
+        "no_at_fault": true,
+        "episode_done": false
+      },
+      {
+        "rank": 6,
+        "local_idx": 74,
+        "scenario_idx": 74,
+        "score": 0.9193772077560425,
+        "progress": 0.9999999403953552,
+        "no_at_fault": true,
+        "episode_done": false
+      },
+      {
+        "rank": 7,
+        "local_idx": 153,
+        "scenario_idx": 153,
+        "score": 0.9049839973449707,
+        "progress": 0.9999999403953552,
+        "no_at_fault": true,
+        "episode_done": false
+      },
+      {
+        "rank": 8,
+        "local_idx": 362,
+        "scenario_idx": 362,
+        "score": 0.8843690156936646,
+        "progress": 0.9999999403953552,
+        "no_at_fault": true,
+        "episode_done": false
+      },
+      {
+        "rank": 9,
+        "local_idx": 287,
+        "scenario_idx": 287,
+        "score": 0.883988618850708,
+        "progress": 0.9999999403953552,
+        "no_at_fault": true,
+        "episode_done": false
+      },
+      {
+        "rank": 10,
+        "local_idx": 273,
+        "scenario_idx": 273,
+        "score": 0.8742768168449402,
+        "progress": 1.0000001192092896,
+        "no_at_fault": true,
+        "episode_done": false
+      }
+    ],
+    "ttc_success": [
+      {
+        "rank": 1,
+        "local_idx": 327,
+        "scenario_idx": 327,
+        "score": 0.8756847977638245,
+        "progress": 0.8435559272766113,
+        "no_at_fault": true,
+        "episode_done": false
+      },
+      {
+        "rank": 2,
+        "local_idx": 381,
+        "scenario_idx": 381,
+        "score": 0.842363715171814,
+        "progress": 1.0,
+        "no_at_fault": true,
+        "episode_done": false
+      },
+      {
+        "rank": 3,
+        "local_idx": 307,
+        "scenario_idx": 307,
+        "score": 0.801028847694397,
+        "progress": 1.0,
+        "no_at_fault": true,
+        "episode_done": false
+      },
+      {
+        "rank": 4,
+        "local_idx": 246,
+        "scenario_idx": 246,
+        "score": 0.7909744381904602,
+        "progress": 1.0,
+        "no_at_fault": true,
+        "episode_done": false
+      },
+      {
+        "rank": 5,
+        "local_idx": 344,
+        "scenario_idx": 344,
+        "score": 0.7728522419929504,
+        "progress": 1.0,
+        "no_at_fault": true,
+        "episode_done": false
+      },
+      {
+        "rank": 6,
+        "local_idx": 119,
+        "scenario_idx": 119,
+        "score": 0.7597640752792358,
+        "progress": 1.0,
+        "no_at_fault": true,
+        "episode_done": false
+      },
+      {
+        "rank": 7,
+        "local_idx": 0,
+        "scenario_idx": 0,
+        "score": 0.7508881688117981,
+        "progress": 0.9999999403953552,
+        "no_at_fault": true,
+        "episode_done": false
+      },
+      {
+        "rank": 8,
+        "local_idx": 358,
+        "scenario_idx": 358,
+        "score": 0.7353050112724304,
+        "progress": 1.0,
+        "no_at_fault": true,
+        "episode_done": false
+      },
+      {
+        "rank": 9,
+        "local_idx": 362,
+        "scenario_idx": 362,
+        "score": 0.7130946516990662,
+        "progress": 0.9999999403953552,
+        "no_at_fault": true,
+        "episode_done": false
+      },
+      {
+        "rank": 10,
+        "local_idx": 164,
+        "scenario_idx": 164,
+        "score": 0.709875762462616,
+        "progress": 1.0,
+        "no_at_fault": true,
+        "episode_done": false
+      }
+    ],
+    "curvature_nav": [
+      {
+        "rank": 1,
+        "local_idx": 244,
+        "scenario_idx": 244,
+        "score": 0.9776371717453003,
+        "progress": 1.0,
+        "no_at_fault": true,
+        "episode_done": false
+      },
+      {
+        "rank": 2,
+        "local_idx": 57,
+        "scenario_idx": 57,
+        "score": 0.9242663383483887,
+        "progress": 1.0,
+        "no_at_fault": true,
+        "episode_done": false
+      },
+      {
+        "rank": 3,
+        "local_idx": 109,
+        "scenario_idx": 109,
+        "score": 0.9194992780685425,
+        "progress": 1.0,
+        "no_at_fault": true,
+        "episode_done": false
+      },
+      {
+        "rank": 4,
+        "local_idx": 319,
+        "scenario_idx": 319,
+        "score": 0.9162251949310303,
+        "progress": 1.0,
+        "no_at_fault": true,
+        "episode_done": false
+      },
+      {
+        "rank": 5,
+        "local_idx": 214,
+        "scenario_idx": 214,
+        "score": 0.9107486605644226,
+        "progress": 1.0,
+        "no_at_fault": true,
+        "episode_done": false
+      },
+      {
+        "rank": 6,
+        "local_idx": 206,
+        "scenario_idx": 206,
+        "score": 0.8947485089302063,
+        "progress": 1.0,
+        "no_at_fault": true,
+        "episode_done": false
+      },
+      {
+        "rank": 7,
+        "local_idx": 156,
+        "scenario_idx": 156,
+        "score": 0.8941373229026794,
+        "progress": 1.0,
+        "no_at_fault": true,
+        "episode_done": false
+      },
+      {
+        "rank": 8,
+        "local_idx": 327,
+        "scenario_idx": 327,
+        "score": 0.8853976130485535,
+        "progress": 0.8435559272766113,
+        "no_at_fault": true,
+        "episode_done": false
+      },
+      {
+        "rank": 9,
+        "local_idx": 376,
+        "scenario_idx": 376,
+        "score": 0.8846158981323242,
+        "progress": 1.0,
+        "no_at_fault": true,
+        "episode_done": false
+      },
+      {
+        "rank": 10,
+        "local_idx": 235,
+        "scenario_idx": 235,
+        "score": 0.882517397403717,
+        "progress": 0.9999999403953552,
+        "no_at_fault": true,
+        "episode_done": false
+      }
+    ],
+    "concept_failure": [
+      {
+        "rank": 1,
+        "local_idx": 142,
+        "scenario_idx": 142,
+        "score": 0.8418838977813721,
+        "progress": 0.5459316968917847,
+        "no_at_fault": false,
+        "episode_done": true
+      },
+      {
+        "rank": 2,
+        "local_idx": 278,
+        "scenario_idx": 278,
+        "score": 0.8158846855163574,
+        "progress": 1.0,
+        "no_at_fault": false,
+        "episode_done": true
+      },
+      {
+        "rank": 3,
+        "local_idx": 309,
+        "scenario_idx": 309,
+        "score": 0.8148604691028595,
+        "progress": 1.0,
+        "no_at_fault": false,
+        "episode_done": true
+      },
+      {
+        "rank": 4,
+        "local_idx": 187,
+        "scenario_idx": 187,
+        "score": 0.805419659614563,
+        "progress": 0.9999999403953552,
+        "no_at_fault": false,
+        "episode_done": true
+      },
+      {
+        "rank": 5,
+        "local_idx": 274,
+        "scenario_idx": 274,
+        "score": 0.7891701459884644,
+        "progress": 0.5987677574157715,
+        "no_at_fault": false,
+        "episode_done": true
+      },
+      {
+        "rank": 6,
+        "local_idx": 61,
+        "scenario_idx": 61,
+        "score": 0.7874384582042694,
+        "progress": 0.8810044527053833,
+        "no_at_fault": false,
+        "episode_done": true
+      },
+      {
+        "rank": 7,
+        "local_idx": 229,
+        "scenario_idx": 229,
+        "score": 0.774956202507019,
+        "progress": 1.0,
+        "no_at_fault": false,
+        "episode_done": true
+      },
+      {
+        "rank": 8,
+        "local_idx": 357,
+        "scenario_idx": 357,
+        "score": 0.7730522513389587,
+        "progress": 1.0,
+        "no_at_fault": false,
+        "episode_done": true
+      },
+      {
+        "rank": 9,
+        "local_idx": 391,
+        "scenario_idx": 391,
+        "score": 0.7651171684265137,
+        "progress": 0.5976978540420532,
+        "no_at_fault": false,
+        "episode_done": true
+      },
+      {
+        "rank": 10,
+        "local_idx": 379,
+        "scenario_idx": 379,
+        "score": 0.7473909914493561,
+        "progress": 1.0,
+        "no_at_fault": false,
+        "episode_done": true
+      }
+    ]
+  }
+}

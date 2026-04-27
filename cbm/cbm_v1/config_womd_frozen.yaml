@@ -1,0 +1,60 @@
+# CBM-V1 Frozen-Encoder Training Config — WOMD single GPU
+#
+# Pretrained encoder is FROZEN (stop_gradient after encoder).
+# Only concept_head + actor/critic FC layers are updated.
+# Switch to mode: joint for end-to-end fine-tuning.
+#
+# Runtime:  single GTX 1660 Ti (6 GB)
+# Dataset:  data/training.tfrecord  (951 MB WOMD sample)
+# Steps:    2,000,000  (~6-8 hours estimated)
+
+# ── Paths ─────────────────────────────────────────────────────────────
+pretrained_dir: "runs_rlc/womd_sac_road_perceiver_minimal_42"
+data_path:      "data/training.tfrecord"
+output_dir:     "runs_cbm"
+run_name:       "cbm_v1_frozen_womd_42"
+
+# ── Type remapping (pretrained checkpoint was "perceiver"/"road") ──────
+encoder_remap:
+  perceiver: lq
+obs_type_remap:
+  road: vec
+  lane: vec
+
+# ── CBM architecture ──────────────────────────────────────────────────
+mode:           "frozen"   # frozen | joint
+num_concepts:   11
+lambda_concept: 0.1        # weight for concept supervision loss
+
+# ── Parallelism / batch structure ─────────────────────────────────────
+# data_gen batch_dims = (num_devices, num_parallel_envs, num_episodes_per_env)
+# Inside pmap: (num_parallel_envs, num_episodes_per_env)
+# AutoResetWrapper outer-vmaps over num_parallel_envs
+# VmapWrapper inner-vmaps over num_episodes_per_env
+num_parallel_envs:   1     # outer vmap dim (env streams per device)
+num_episodes_per_env: 4    # inner vmap dim (episode pool per stream)
+
+# ── Training schedule ─────────────────────────────────────────────────
+# scan_length: steps per jax.lax.scan iteration
+# env_steps_per_iter = scan_length * num_parallel_envs = 320
+# total_iters ≈ total_timesteps / env_steps_per_iter = 6,250
+scan_length:      320      # = num_episodes_per_env * scenario_length / unroll_length
+scenario_length:   80      # waymax episode length
+unroll_length:      1      # unroll steps per policy step
+total_timesteps: 2_000_000
+
+# ── SAC hyperparameters ───────────────────────────────────────────────
+alpha:              0.2
+discount:           0.99
+tau:                0.005
+learning_rate:      0.0001
+batch_size:         64
+grad_updates_per_step: 4
+buffer_size:      500_000
+learning_start:    5000    # random steps before gradient updates
+
+# ── Logging / checkpointing ───────────────────────────────────────────
+log_freq:    10            # log metrics every N iters
+save_freq:   500           # save checkpoint every N iters (~160k steps each)
+seed:        42
+disable_tqdm: false

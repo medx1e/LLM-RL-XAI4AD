@@ -1,0 +1,172 @@
+{
+  "checkpoint": "cbm_scratch_v2_lambda05/checkpoints/model_final.pkl",
+  "config_source": "cbm_v1/config_womd_scratch.yaml",
+  "data": "data/training.tfrecord",
+  "num_scenarios": 1,
+  "mode": "scratch",
+  "num_concepts": 15,
+  "concept_phases": [
+    1,
+    2,
+    3
+  ],
+  "concept_metrics": {
+    "ego_speed": {
+      "type": "continuous",
+      "mae": 0.030627161264419556,
+      "r2": 0.3162562847137451,
+      "valid_pct": 100.0
+    },
+    "ego_acceleration": {
+      "type": "continuous",
+      "mae": 0.04773277789354324,
+      "r2": -0.0827639102935791,
+      "valid_pct": 100.0
+    },
+    "dist_nearest_object": {
+      "type": "continuous",
+      "mae": 0.0259625855833292,
+      "r2": -0.948576807975769,
+      "valid_pct": 100.0
+    },
+    "num_objects_within_10m": {
+      "type": "continuous",
+      "mae": 0.19264569878578186,
+      "r2": -3.310337543487549,
+      "valid_pct": 100.0
+    },
+    "traffic_light_red": {
+      "type": "binary",
+      "accuracy": NaN,
+      "valid_pct": 0.0
+    },
+    "dist_to_traffic_light": {
+      "type": "continuous",
+      "mae": NaN,
+      "r2": NaN,
+      "valid_pct": 0.0
+    },
+    "heading_deviation": {
+      "type": "continuous",
+      "mae": 0.10464215278625488,
+      "r2": -12.788714408874512,
+      "valid_pct": 100.0
+    },
+    "progress_along_route": {
+      "type": "continuous",
+      "mae": 0.04869082197546959,
+      "r2": 0.07841503620147705,
+      "valid_pct": 100.0
+    },
+    "ttc_lead_vehicle": {
+      "type": "continuous",
+      "mae": 0.6933754682540894,
+      "r2": NaN,
+      "valid_pct": 1.25
+    },
+    "lead_vehicle_decelerating": {
+      "type": "binary",
+      "accuracy": 1.0,
+      "valid_pct": 1.25
+    },
+    "at_intersection": {
+      "type": "binary",
+      "accuracy": NaN,
+      "valid_pct": 0.0
+    },
+    "path_curvature_max": {
+      "type": "continuous",
+      "mae": 0.3065245747566223,
+      "r2": -3.197204113006592,
+      "valid_pct": 100.0
+    },
+    "path_net_heading_change": {
+      "type": "continuous",
+      "mae": 0.05245474725961685,
+      "r2": -0.5236988067626953,
+      "valid_pct": 100.0
+    },
+    "path_straightness": {
+      "type": "continuous",
+      "mae": 0.08384688943624496,
+      "r2": 0.004272520542144775,
+      "valid_pct": 100.0
+    },
+    "heading_to_path_end": {
+      "type": "continuous",
+      "mae": 0.07632957398891449,
+      "r2": -2.902811288833618,
+      "valid_pct": 100.0
+    }
+  },
+  "task_metrics": {
+    "accuracy": 0.0,
+    "ep_return_mean": -7.0,
+    "ep_return_std": 0.0,
+    "n_scenarios": 1,
+    "at_fault_collision": 0.0,
+    "comfort": 1.0,
+    "driving_direction_compliance": 0.0,
+    "log_divergence": 5.12581729888916,
+    "offroad": 0.0,
+    "on_multiple_lanes": 0.0,
+    "overlap": 1.0,
+    "progress_ratio_nuplan": 0.6815857291221619,
+    "run_red_light": 0.0,
+    "sdc_off_route": 0.0,
+    "sdc_progression": 0.7749029397964478,
+    "sdc_wrongway": 0.0,
+    "speed_limit": 0.0,
+    "ttc": 5.0
+  },
+  "per_scenario": {
+    "early_done": [
+      true
+    ],
+    "ep_return": [
+      -7.0
+    ],
+    "at_fault_collision": [
+      0.0
+    ],
+    "comfort": [
+      1.0
+    ],
+    "driving_direction_compliance": [
+      0.0
+    ],
+    "log_divergence": [
+      5.12581729888916
+    ],
+    "offroad": [
+      0.0
+    ],
+    "on_multiple_lanes": [
+      0.0
+    ],
+    "overlap": [
+      1.0
+    ],
+    "progress_ratio_nuplan": [
+      0.6815857291221619
+    ],
+    "run_red_light": [
+      0.0
+    ],
+    "sdc_off_route": [
+      0.0
+    ],
+    "sdc_progression": [
+      0.7749029397964478
+    ],
+    "sdc_wrongway": [
+      0.0
+    ],
+    "speed_limit": [
+      0.0
+    ],
+    "ttc": [
+      5.0
+    ]
+  }
+}

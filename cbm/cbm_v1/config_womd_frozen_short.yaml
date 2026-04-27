@@ -1,0 +1,40 @@
+# CBM-V1 SHORT RUN — for verifying the training stack works end-to-end
+# Runs for 5,000 steps (~15-30 minutes). Use this before committing to
+# a full 2M-step run.
+
+pretrained_dir: "runs_rlc/womd_sac_road_perceiver_minimal_42"
+data_path:      "data/training.tfrecord"
+output_dir:     "runs_cbm"
+run_name:       "cbm_v1_frozen_short_verify"
+
+encoder_remap:
+  perceiver: lq
+obs_type_remap:
+  road: vec
+  lane: vec
+
+mode:           "frozen"
+num_concepts:   11
+lambda_concept: 0.1
+
+num_parallel_envs:   1
+num_episodes_per_env: 4
+
+scan_length:        10     # short for quick verify (~0.5s per iter after JIT)
+scenario_length:    80
+unroll_length:       1
+total_timesteps:   500    # ~50 iters
+
+alpha:              0.2
+discount:           0.99
+tau:                0.005
+learning_rate:      0.0001
+batch_size:         32
+grad_updates_per_step: 2
+buffer_size:       10_000
+learning_start:     200   # fast prefill
+
+log_freq:    1            # log every iter for visibility
+save_freq:   10           # checkpoint every 10 iters
+seed:        42
+disable_tqdm: false

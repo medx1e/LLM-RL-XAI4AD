@@ -1,0 +1,38 @@
+{
+  "1": {
+    "T": 80,
+    "has_rollout": true,
+    "n_self_layers": 4,
+    "mad": {
+      "sdc_trajectory": 0.02206621713598897,
+      "other_agents": 0.023964384293537748,
+      "roadgraph": 0.03373757992540523,
+      "traffic_lights": 0.09670469617375603,
+      "gps_path": 0.021211319218625103
+    }
+  },
+  "2": {
+    "T": 80,
+    "has_rollout": true,
+    "n_self_layers": 4,
+    "mad": {
+      "sdc_trajectory": 0.009729609715334231,
+      "other_agents": 0.00839176414980585,
+      "roadgraph": 0.07341656963278086,
+      "traffic_lights": 0.0715440648000218,
+      "gps_path": 0.004259406358716883
+    }
+  },
+  "3": {
+    "T": 80,
+    "has_rollout": true,
+    "n_self_layers": 4,
+    "mad": {
+      "sdc_trajectory": 0.030661480684114763,
+      "other_agents": 0.011292168474482434,
+      "roadgraph": 0.04841905812908594,
+      "traffic_lights": 0.11497792474030757,
+      "gps_path": 0.04146139558391515
+    }
+  }
+}

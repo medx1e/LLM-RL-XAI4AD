@@ -1,0 +1,9 @@
+model,scenario_id,attention_signal,method,risk_bucket,pearson_r,n
+complete,0,norm_weighted,vg,calm,0.9750330734146041,33
+complete,0,norm_weighted,ig,calm,0.9634558335643192,33
+complete,0,norm_weighted,vg,high,0.961659873857494,43
+complete,0,norm_weighted,ig,high,0.7463298698754032,43
+complete,0,rollout,vg,calm,0.9349938665176211,33
+complete,0,rollout,ig,calm,0.9128288784817481,33
+complete,0,rollout,vg,high,0.9155607218460421,43
+complete,0,rollout,ig,high,0.595238827021862,43

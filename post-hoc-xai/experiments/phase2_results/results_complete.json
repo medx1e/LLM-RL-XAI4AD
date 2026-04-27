@@ -1,0 +1,65 @@
+{
+  "integrated_gradients": {
+    "mean_tau": 0.05833333333333331,
+    "median_tau": 0.19999999999999998,
+    "pct_positive": 0.5041666666666667,
+    "n_timesteps": 240
+  },
+  "gradient_x_input": {
+    "mean_tau": 0.3325000000000001,
+    "median_tau": 0.39999999999999997,
+    "pct_positive": 0.8791666666666667,
+    "n_timesteps": 240
+  },
+  "vanilla_gradient": {
+    "mean_tau": 0.45333333333333337,
+    "median_tau": 0.39999999999999997,
+    "pct_positive": 0.9625,
+    "n_timesteps": 240
+  },
+  "ig_mean_baseline": {
+    "mean_tau": 0.08916666666666662,
+    "median_tau": 0.19999999999999998,
+    "pct_positive": 0.55,
+    "n_timesteps": 240
+  },
+  "IG_zero_vs_IG_mean (calibration)": {
+    "mean_tau": 0.8375,
+    "median_tau": 0.7999999999999999,
+    "pct_positive": 1.0,
+    "n_timesteps": 240
+  },
+  "IG_vs_VG (calibration)": {
+    "mean_tau": 0.5408333333333332,
+    "median_tau": 0.6,
+    "pct_positive": 0.9,
+    "n_timesteps": 240
+  },
+  "category_corr_ig": {
+    "sdc_trajectory": {
+      "r": -0.053141271669882986,
+      "p": 0.6396699346990868,
+      "constant": false
+    },
+    "other_agents": {
+      "r": 0.6628858297195308,
+      "p": 2.105351444925931e-11,
+      "constant": false
+    },
+    "roadgraph": {
+      "r": 0.8453572083368804,
+      "p": 6.113829946297017e-23,
+      "constant": false
+    },
+    "traffic_lights": {
+      "r": 0.0,
+      "p": 1.0,
+      "constant": true
+    },
+    "gps_path": {
+      "r": -0.13668849936824595,
+      "p": 0.2266545248573555,
+      "constant": false
+    }
+  }
+}

@@ -1,0 +1,5 @@
+model,scenario_id,attention_signal,method,pearson_r
+complete,0,norm_weighted,vg,0.9687785187913567
+complete,0,norm_weighted,ig,0.8367740192282873
+complete,0,rollout,vg,0.9258581837670345
+complete,0,rollout,ig,0.7277512116609863
