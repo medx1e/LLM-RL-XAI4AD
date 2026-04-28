@@ -1,0 +1,32 @@
+line-length = 120
+target-version = "py310"
+
+[lint]
+select = [
+    "F",    # pyflakes
+    "E",    # pycodestyle errors
+    "W",    # pycodestyle warnings
+    "C90",  # mccabe
+    "I",    # isort
+    "N",    # pep8-naming
+    "UP",   # pyupgrade
+    "COM",  # flake8-commas
+    "C40",  # flake8-comprehensions
+    "ISC",  # flake8-implicit-str-concat
+    "ICN",  # flake8-import-conventions
+    "PIE",  # flake8-pie
+    "PYI",  # flake8-pyi
+    "SIM",  # flake8-simplify
+    "TID",  # flake8-tidy-imports
+    "RUF",  # ruff
+]
+
+ignore = ["RUF005", "E712", "ISC001"]
+
+
+[lint.isort]
+lines-after-imports = 2
+split-on-trailing-comma = false
+
+[lint.mccabe]
+max-complexity = 12

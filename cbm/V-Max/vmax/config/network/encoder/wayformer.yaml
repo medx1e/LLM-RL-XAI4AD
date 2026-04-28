@@ -1,0 +1,15 @@
+defaults:
+  - _self_
+
+type: wayformer
+embedding_layer_sizes: [256, 256]
+embedding_activation: relu
+attention_depth: 2
+dk: 64
+num_latents: 16
+latent_num_heads: 2
+latent_head_features: 16
+ff_mult: 2
+attn_dropout: 0.0
+ff_dropout: 0.0
+fusion_type: late # early, late, hierarchical

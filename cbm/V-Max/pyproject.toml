@@ -1,0 +1,12 @@
+[project]
+name = "vmax"
+version = "0.1.0"
+description = "Simulator for autonomous driving"
+requires-python = ">=3.10"
+
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = ["vmax"]

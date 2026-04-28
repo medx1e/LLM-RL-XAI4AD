@@ -1,0 +1,29 @@
+defaults:
+  - /network/base
+  - _self_
+
+name: PPO
+unroll_length: 40
+batch_size: 128
+num_minibatches: 4
+learning_rate: 3e-4
+discount: 0.99
+gae_lambda: 0.95
+eps_clip: 0.2
+value_coef: 0.5
+entropy_coef: 0.01
+normalize_advantages: true
+grad_updates_per_step: 4
+
+network:
+  policy:
+    layer_sizes: [256, 64, 32]
+    activation: tanh  # gelu, relu, selu
+    final_activation: none  # none, tanh, relu
+
+  value:
+    layer_sizes: [256, 64, 32]
+    activation: tanh  # gelu, relu, selu
+    final_activation: none  # tanh, relu
+    num_networks: 1
+    shared_encoder: false

@@ -1,0 +1,31 @@
+defaults:
+  - /network/base
+  - _self_
+
+name: BC_SAC
+unroll_length: 1
+rl_learning_rate: 1e-4
+imitation_learning_rate: 5e-5
+imitation_frequency: 8
+imitation_unroll_length: 80
+discount: 0.99
+tau: 0.005
+alpha: 0.2
+batch_size: 64
+grad_updates_per_step: 4
+loss_type: mse  # mae, logprob, mse
+buffer_size: 500_000
+learning_start: 50_000
+
+network:
+  policy:
+    layer_sizes: [256, 64, 32]
+    activation: relu  # gelu, relu, selu
+    final_activation: null
+
+  value:
+    layer_sizes: [256, 64, 32]
+    activation: relu  # gelu, relu, selu
+    final_activation: relu  # tanh, relu
+    num_networks: 2
+    shared_encoder: false

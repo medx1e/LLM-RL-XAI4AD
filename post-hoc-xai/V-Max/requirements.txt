@@ -1,0 +1,24 @@
+# Waymo Waymax Simulator
+waymo-waymax @ git+https://github.com/waymo-research/waymax.git@main
+# JAX with CUDA 12 support
+jax[cuda12]<0.6
+# Neural Network Libraries
+flax
+distrax
+einops
+tf_keras
+# Utilities
+gymnasium
+hydra-core
+matplotlib<3.10
+tensorboard<2.19
+tensorboard-plugin-profile<2.19
+psutil
+pandas
+seaborn
+ipython
+ipykernel
+
+#Dev
+pre-commit
+ruff

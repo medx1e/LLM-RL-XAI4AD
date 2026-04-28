@@ -1,0 +1,9 @@
+defaults:
+  - _self_
+
+type: mlp
+embedding_layer_sizes: [256, 256]
+embedding_activation: relu
+dk: 64
+concat_layer_sizes: [256, 256]
+concat_activation: relu
