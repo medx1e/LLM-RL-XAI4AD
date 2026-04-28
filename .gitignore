@@ -67,3 +67,8 @@ inspect_seed0.py
 path_spatial_candidates.yaml
 path_spatial_concepts_analysis.md
 platform_cache/
+
+
+# ============== pdf& images ==============
+*.pdf
+*.png
