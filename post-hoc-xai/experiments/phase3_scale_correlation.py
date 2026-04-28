@@ -236,8 +236,8 @@ def compute_ig_batch(
     if cache_key not in _ig_jit_cache:
         @jax.jit
         def _ig_scan(obs_batch: jnp.ndarray, bl: jnp.ndarray) -> jnp.ndarray:
-            """IG for all T timesteps via lax.scan — one JIT call, no per-step syncs."""
-            def ig_one_t(carry, obs_1d):
+            """IG for all T timesteps — vmapped over both T and alphas in one GPU call."""
+            def ig_one_t(obs_1d):
                 def grad_at_alpha(alpha):
                     interp = bl + alpha * (obs_1d - bl)
                     def scalar_fn(x):
@@ -247,9 +247,8 @@ def compute_ig_batch(
                 path_grads = jax.vmap(grad_at_alpha)(alphas)       # (n_steps+1, D)
                 interior   = jnp.sum(path_grads[1:-1], axis=0)
                 avg_grads  = (path_grads[0] + 2.0 * interior + path_grads[-1]) / (2.0 * N_IG_STEPS)
-                return carry, (obs_1d - bl) * avg_grads            # (D,)
-            _, all_attrs = jax.lax.scan(ig_one_t, None, obs_batch)
-            return all_attrs                                        # (T, D)
+                return (obs_1d - bl) * avg_grads                   # (D,)
+            return jax.vmap(ig_one_t)(obs_batch)                   # (T, D)
         _ig_jit_cache[cache_key] = _ig_scan
 
     all_attrs = np.array(_ig_jit_cache[cache_key](jnp.array(raw_obs), baseline_jnp))  # (T, D)
