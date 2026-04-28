@@ -602,10 +602,12 @@ def main():
     parser.add_argument("--data-path", type=str, default=None,
                         help="Path to training.tfrecord. Defaults to cbm/data/training.tfrecord "
                              "relative to this repo. Override on cluster if dataset is elsewhere.")
+    parser.add_argument("--ig-steps", type=int, default=None,
+                        help="IG integration steps. Default: 50. Use 20-25 on cluster for ~2x speed.")
     args = parser.parse_args()
 
     # CLI overrides beat module-level config constants
-    global METHODS, OBS_CHUNK_SIZE, ATTENTION_SIGNALS, DATA_PATH
+    global METHODS, OBS_CHUNK_SIZE, ATTENTION_SIGNALS, DATA_PATH, N_IG_STEPS
     if args.methods is not None:
         METHODS = args.methods
     if args.chunk_size is not None:
@@ -614,6 +616,8 @@ def main():
         ATTENTION_SIGNALS = args.attention_signals
     if args.data_path is not None:
         DATA_PATH = args.data_path
+    if args.ig_steps is not None:
+        N_IG_STEPS = args.ig_steps
 
     model_key   = args.model
     n_scenarios = args.n_scenarios

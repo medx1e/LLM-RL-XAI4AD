@@ -37,6 +37,8 @@ def main():
     parser.add_argument("--figures-only", action="store_true")
     parser.add_argument("--data-path", type=str, default=None,
                         help="Path to training.tfrecord if not at cbm/data/training.tfrecord.")
+    parser.add_argument("--ig-steps", type=int, default=None,
+                        help="IG integration steps. Default: 50. Use 20-25 for ~2x speed.")
     args = parser.parse_args()
 
     cmd = [
@@ -51,6 +53,8 @@ def main():
         cmd.append("--figures-only")
     if args.data_path:
         cmd += ["--data-path", args.data_path]
+    if args.ig_steps:
+        cmd += ["--ig-steps", str(args.ig_steps)]
 
     print(f"Running: {' '.join(cmd)}\n")
     subprocess.run(cmd, check=True)
