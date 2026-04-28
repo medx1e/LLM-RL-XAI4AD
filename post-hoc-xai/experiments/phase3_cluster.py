@@ -35,6 +35,8 @@ def main():
     parser.add_argument("--model",       required=True, choices=["complete", "minimal"])
     parser.add_argument("--n-scenarios", type=int, default=50)
     parser.add_argument("--figures-only", action="store_true")
+    parser.add_argument("--data-path", type=str, default=None,
+                        help="Path to training.tfrecord if not at cbm/data/training.tfrecord.")
     args = parser.parse_args()
 
     cmd = [
@@ -47,6 +49,8 @@ def main():
     ]
     if args.figures_only:
         cmd.append("--figures-only")
+    if args.data_path:
+        cmd += ["--data-path", args.data_path]
 
     print(f"Running: {' '.join(cmd)}\n")
     subprocess.run(cmd, check=True)

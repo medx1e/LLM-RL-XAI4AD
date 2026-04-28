@@ -112,7 +112,7 @@ Expected: prints `JAX devices: [CudaDevice(id=0)]` (or similar GPU device).
 ```bash
 conda activate vmax
 cd ~/platform_fyp/post-hoc-xai
-python experiments/phase3_cluster.py --model complete
+python experiments/phase3_cluster.py --model complete --data-path /path/to/training.tfrecord
 ```
 
 ### 3b. Minimal model (second session / job)
@@ -120,8 +120,10 @@ python experiments/phase3_cluster.py --model complete
 ```bash
 conda activate vmax
 cd ~/platform_fyp/post-hoc-xai
-python experiments/phase3_cluster.py --model minimal
+python experiments/phase3_cluster.py --model minimal --data-path /path/to/training.tfrecord
 ```
+
+If the dataset is already at `cbm/data/training.tfrecord` relative to the repo root, `--data-path` can be omitted.
 
 That's it. The cluster entry point (`phase3_cluster.py`) automatically sets:
 

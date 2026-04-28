@@ -599,16 +599,21 @@ def main():
     parser.add_argument("--attention-signals", nargs="+", default=None,
                         help="Attention signals to compute, e.g. --attention-signals rollout norm_weighted. "
                              "Default: rollout. Add norm_weighted after Phase 1d validation.")
+    parser.add_argument("--data-path", type=str, default=None,
+                        help="Path to training.tfrecord. Defaults to cbm/data/training.tfrecord "
+                             "relative to this repo. Override on cluster if dataset is elsewhere.")
     args = parser.parse_args()
 
     # CLI overrides beat module-level config constants
-    global METHODS, OBS_CHUNK_SIZE, ATTENTION_SIGNALS
+    global METHODS, OBS_CHUNK_SIZE, ATTENTION_SIGNALS, DATA_PATH
     if args.methods is not None:
         METHODS = args.methods
     if args.chunk_size is not None:
         OBS_CHUNK_SIZE = args.chunk_size
     if args.attention_signals is not None:
         ATTENTION_SIGNALS = args.attention_signals
+    if args.data_path is not None:
+        DATA_PATH = args.data_path
 
     model_key   = args.model
     n_scenarios = args.n_scenarios
