@@ -208,16 +208,18 @@ def compute_vg_batch(model, raw_obs: np.ndarray) -> np.ndarray:
     return result   # (T, 5)
 
 
+# Module-level JIT cache — keyed by (params id, n_ig_steps).
+# Prevents recompilation on every scenario call (new closure = new function object = retrace).
+_ig_jit_cache: dict = {}
+
+
 def compute_ig_batch(
     model, raw_obs: np.ndarray, baseline: np.ndarray, **_
 ) -> np.ndarray:
-    """IG with validity-zeroed mean baseline — JIT-compiled once for all T timesteps.
+    """IG with validity-zeroed mean baseline.
 
-    The previous implementation called ig() per timestep, which caused JAX to
-    retrace and recompile the vmap on every call (different closure over 'observation').
-    This version makes obs an explicit argument so JAX compiles once for shape (D,)
-    and reuses the compiled function for all 80 timesteps.
-    Expected speedup: ~80× (from ~10 min → ~30–60 s per scenario).
+    baseline is passed as an explicit traced argument so the same compiled
+    function is reused across all scenarios even as the baseline evolves.
     """
     import jax, jax.numpy as jnp
 
@@ -228,31 +230,31 @@ def compute_ig_batch(
     T           = raw_obs.shape[0]
 
     baseline_jnp = jnp.array(baseline)
-    alphas       = jnp.linspace(0.0, 1.0, N_IG_STEPS + 1)   # (n_steps+1,)
+    alphas       = jnp.linspace(0.0, 1.0, N_IG_STEPS + 1)
 
-    # JIT once — baseline and alphas are traced constants (same across all calls)
-    @jax.jit
-    def ig_one(obs_1d: jnp.ndarray) -> jnp.ndarray:
-        """Raw IG attribution for a single observation. Shape: (D,)."""
-        def grad_at_alpha(alpha):
-            interp = baseline_jnp + alpha * (obs_1d - baseline_jnp)
-            def scalar_fn(x):
-                logits = module.apply(params, x[None, :])
-                return jnp.sum(logits[0, :action_size])
-            return jax.grad(scalar_fn)(interp)
+    cache_key = (id(params), N_IG_STEPS)
+    if cache_key not in _ig_jit_cache:
+        @jax.jit
+        def _ig_one(obs_1d: jnp.ndarray, bl: jnp.ndarray) -> jnp.ndarray:
+            def grad_at_alpha(alpha):
+                interp = bl + alpha * (obs_1d - bl)
+                def scalar_fn(x):
+                    logits = module.apply(params, x[None, :])
+                    return jnp.sum(logits[0, :action_size])
+                return jax.grad(scalar_fn)(interp)
+            path_grads = jax.vmap(grad_at_alpha)(alphas)
+            interior   = jnp.sum(path_grads[1:-1], axis=0)
+            avg_grads  = (path_grads[0] + 2.0 * interior + path_grads[-1]) / (2.0 * N_IG_STEPS)
+            return (obs_1d - bl) * avg_grads
+        _ig_jit_cache[cache_key] = _ig_one
 
-        path_grads = jax.vmap(grad_at_alpha)(alphas)          # (n_steps+1, D)
-        interior   = jnp.sum(path_grads[1:-1], axis=0)
-        avg_grads  = (
-            path_grads[0] + 2.0 * interior + path_grads[-1]
-        ) / (2.0 * N_IG_STEPS)
-        return (obs_1d - baseline_jnp) * avg_grads            # (D,)
+    ig_one = _ig_jit_cache[cache_key]
 
     obs_batch = jnp.array(raw_obs)   # (T, D)
     result    = np.zeros((T, len(CATS)), dtype=np.float32)
 
     for t in range(T):
-        raw_attr = np.array(ig_one(obs_batch[t]))   # compiled once, reused 80x
+        raw_attr = np.array(ig_one(obs_batch[t], baseline_jnp))
         abs_g    = np.abs(raw_attr)
         total    = abs_g.sum() + 1e-10
         result[t] = [abs_g[s:e].sum() / total
