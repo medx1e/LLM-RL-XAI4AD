@@ -235,28 +235,28 @@ def compute_ig_batch(
     cache_key = (id(params), N_IG_STEPS)
     if cache_key not in _ig_jit_cache:
         @jax.jit
-        def _ig_one(obs_1d: jnp.ndarray, bl: jnp.ndarray) -> jnp.ndarray:
-            def grad_at_alpha(alpha):
-                interp = bl + alpha * (obs_1d - bl)
-                def scalar_fn(x):
-                    logits = module.apply(params, x[None, :])
-                    return jnp.sum(logits[0, :action_size])
-                return jax.grad(scalar_fn)(interp)
-            path_grads = jax.vmap(grad_at_alpha)(alphas)
-            interior   = jnp.sum(path_grads[1:-1], axis=0)
-            avg_grads  = (path_grads[0] + 2.0 * interior + path_grads[-1]) / (2.0 * N_IG_STEPS)
-            return (obs_1d - bl) * avg_grads
-        _ig_jit_cache[cache_key] = _ig_one
+        def _ig_scan(obs_batch: jnp.ndarray, bl: jnp.ndarray) -> jnp.ndarray:
+            """IG for all T timesteps via lax.scan — one JIT call, no per-step syncs."""
+            def ig_one_t(carry, obs_1d):
+                def grad_at_alpha(alpha):
+                    interp = bl + alpha * (obs_1d - bl)
+                    def scalar_fn(x):
+                        logits = module.apply(params, x[None, :])
+                        return jnp.sum(logits[0, :action_size])
+                    return jax.grad(scalar_fn)(interp)
+                path_grads = jax.vmap(grad_at_alpha)(alphas)       # (n_steps+1, D)
+                interior   = jnp.sum(path_grads[1:-1], axis=0)
+                avg_grads  = (path_grads[0] + 2.0 * interior + path_grads[-1]) / (2.0 * N_IG_STEPS)
+                return carry, (obs_1d - bl) * avg_grads            # (D,)
+            _, all_attrs = jax.lax.scan(ig_one_t, None, obs_batch)
+            return all_attrs                                        # (T, D)
+        _ig_jit_cache[cache_key] = _ig_scan
 
-    ig_one = _ig_jit_cache[cache_key]
-
-    obs_batch = jnp.array(raw_obs)   # (T, D)
+    all_attrs = np.array(_ig_jit_cache[cache_key](jnp.array(raw_obs), baseline_jnp))  # (T, D)
     result    = np.zeros((T, len(CATS)), dtype=np.float32)
-
     for t in range(T):
-        raw_attr = np.array(ig_one(obs_batch[t], baseline_jnp))
-        abs_g    = np.abs(raw_attr)
-        total    = abs_g.sum() + 1e-10
+        abs_g     = np.abs(all_attrs[t])
+        total     = abs_g.sum() + 1e-10
         result[t] = [abs_g[s:e].sum() / total
                      for c, (s, e) in obs_struct.items() if c in CATS]
 
