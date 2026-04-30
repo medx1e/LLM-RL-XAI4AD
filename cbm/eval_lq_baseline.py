@@ -25,7 +25,7 @@ from vmax.agents.networks import network_factory
 
 
 def remap_keys(p, old, new):
-    if isinstance(p, dict):
+    if hasattr(p, 'items'):
         return {(new if k == old else k): remap_keys(v, old, new) for k, v in p.items()}
     return p
 
