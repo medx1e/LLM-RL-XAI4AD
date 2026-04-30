@@ -345,7 +345,7 @@ def main():
     print("\n-> Computing concept accuracy...")
     obs_flat = all_obs.reshape(T * N, D)
 
-    CBATCH = 512
+    CBATCH = 8192
     pred_chunks, tgt_chunks, valid_chunks = [], [], []
     for s in range(0, T * N, CBATCH):
         obs_b = obs_flat[s:s + CBATCH]
