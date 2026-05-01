@@ -86,6 +86,7 @@ class CBMPolicyNetwork(nn.Module):
         concepts = self.concept_head(z)
         return z, concepts
 
+    @nn.compact
     def act_from_concepts(self, concepts: jax.Array) -> jax.Array:
         """Run actor head on an externally-supplied concept vector.
         
