@@ -11,6 +11,11 @@ Ablation modes:
   --ablation_mode mean : set c[i] = mean(c[i]) over all steps/scenarios
                          (literature standard — blindfolds without shocking)
 
+Performance note:
+  Uses jax.lax.scan for the 80-step episode loop so the full episode
+  compiles into a single XLA kernel per chunk (not 80 separate dispatches).
+  Concept means are extracted from the baseline pass — no separate 2nd pass.
+
 Usage — scratch model:
     python cbm_v1/eval_cbm_ablation.py \\
         --checkpoint cbm_scratch_v2_lambda05/checkpoints/model_final.pkl \\
@@ -249,106 +254,72 @@ def main():
     num_chunks = math.ceil(args.num_scenarios / CHUNK)
     N = args.num_scenarios
 
-    # ── Generic rollout with optional ablation ────────────────────────
+    # ── JIT-compiled episode runner using lax.scan ────────────────────
+    # Runs all 80 steps as ONE compiled GPU kernel — not 80 Python dispatches.
+    # ablate_mask: bool array (num_concepts,) — True = inject ablate_value.
+    # Compiles once; baseline + all 15 ablations reuse the same XLA program.
+    no_ablation_mask = jnp.zeros(args.num_concepts, dtype=jnp.bool_)
+    jit_reset = jax.jit(env.reset)
+    jit_step  = jax.jit(env.step)
+
+    @jax.jit
+    def run_chunk(chunk_scenarios, reset_keys, ablate_mask, ablate_value):
+        env_state = jit_reset(chunk_scenarios, reset_keys)
+
+        def step_fn(env_state, _):
+            c_natural  = get_concepts(env_state.observation)
+            c_act      = jnp.where(ablate_mask, ablate_value, c_natural)
+            raw_action = act_from_concepts(c_act)
+            action = wdatatypes.Action(
+                data=raw_action,
+                valid=jnp.ones((*raw_action.shape[:-1], 1), dtype=jnp.bool_),
+            )
+            new_state = jit_step(env_state, action)
+            outs = {
+                "reward":   new_state.reward,
+                "done":     new_state.done,
+                "concepts": c_natural,   # (chunk_size, C) — for mean extraction
+                **{k: v for k, v in new_state.metrics.items()},
+            }
+            return new_state, outs
+
+        _, chunk_metrics = jax.lax.scan(step_fn, env_state, None, length=80)
+        return chunk_metrics  # each value: (80, chunk_size, ...)
 
     def run_rollout(ablate_index: int | None, ablate_value: float | None) -> dict:
-        """Run full rollout. If ablate_index is set, override c[ablate_index]=ablate_value."""
-        all_metrics_lists = {}
+        """Run all scenarios. Returns dict of (80, N, ...) arrays."""
+        ablate_mask = (
+            jnp.arange(args.num_concepts) == ablate_index
+            if ablate_index is not None
+            else no_ablation_mask
+        )
+        ablate_val = jnp.array(float(ablate_value) if ablate_value is not None else 0.0)
+
+        chunk_metrics_all: dict = {}
         rng = jax.random.PRNGKey(0)
-
-        for i in range(num_chunks):
-            start = i * CHUNK
-            end   = min((i + 1) * CHUNK, N)
-            size  = end - start
-
-            chunk = jax.tree_util.tree_map(lambda x: x[start:end], scenarios)
-            rng, rk = jax.random.split(rng)
-            reset_keys = jax.random.split(rk, size)
-            env_state  = jax.jit(env.reset)(chunk, reset_keys)
-
-            for _ in range(80):
-                obs = env_state.observation
-                c   = get_concepts(obs)
-
-                if ablate_index is not None:
-                    c = c.at[..., ablate_index].set(ablate_value)
-
-                raw_action = act_from_concepts(c)
-                action = wdatatypes.Action(
-                    data=raw_action,
-                    valid=jnp.ones((*raw_action.shape[:-1], 1), dtype=jnp.bool_),
-                )
-                env_state = env.step(env_state, action)
-                metrics = {
-                    "reward": env_state.reward,
-                    "done":   env_state.done,
-                    **{k: v for k, v in env_state.metrics.items()},
-                }
-                for k, v in metrics.items():
-                    all_metrics_lists.setdefault(k, []).append(np.array(v))
-
-        # Stack: list of (size,) → (T, N) for each metric
-        stacked = {}
-        for k, vlist in all_metrics_lists.items():
-            arr = np.array(vlist)    # (T*num_chunks, size) — need to interleave carefully
-            # Reshape: each chunk contributed 80 steps; concat across chunks along scenario axis
-            # Actually vlist is [step_metric_chunk0, step_metric_chunk0, ...]
-            # We need (T=80, N) — build per-chunk then concatenate
-            stacked[k] = arr  # keep as-is; aggregate_task_metrics handles (T, N)
-
-        # Rebuild correctly: separate per-chunk then concatenate
-        return stacked
-
-    def run_rollout_correct(ablate_index: int | None, ablate_value: float | None) -> dict:
-        """Chunked rollout producing (T=80, N) metric arrays."""
-        chunk_metrics_all = {}   # key → list of (80, chunk_size) arrays
-        rng = jax.random.PRNGKey(0)
-
         for ci in range(num_chunks):
             start = ci * CHUNK
             end   = min((ci + 1) * CHUNK, N)
-            size  = end - start
-
             chunk      = jax.tree_util.tree_map(lambda x: x[start:end], scenarios)
             rng, rk    = jax.random.split(rng)
-            reset_keys = jax.random.split(rk, size)
-            env_state  = jax.jit(env.reset)(chunk, reset_keys)
+            reset_keys = jax.random.split(rk, end - start)
+            chunk_out  = run_chunk(chunk, reset_keys, ablate_mask, ablate_val)
+            jax.block_until_ready(chunk_out)
+            for k, v in chunk_out.items():
+                chunk_metrics_all.setdefault(k, []).append(np.array(v))
 
-            step_metrics = {}   # key → list of (size,) over 80 steps
-            for _ in range(80):
-                obs = env_state.observation
-                c   = get_concepts(obs)
-
-                if ablate_index is not None:
-                    c = c.at[..., ablate_index].set(float(ablate_value))
-
-                raw_action = act_from_concepts(c)
-                action = wdatatypes.Action(
-                    data=raw_action,
-                    valid=jnp.ones((*raw_action.shape[:-1], 1), dtype=jnp.bool_),
-                )
-                env_state = env.step(env_state, action)
-
-                m = {
-                    "reward": env_state.reward,
-                    "done":   env_state.done,
-                    **{k: v for k, v in env_state.metrics.items()},
-                }
-                for k, v in m.items():
-                    step_metrics.setdefault(k, []).append(np.array(v))
-
-            # Stack steps: (80, size)
-            for k, vlist in step_metrics.items():
-                arr = np.stack(vlist, axis=0)  # (80, size)
-                chunk_metrics_all.setdefault(k, []).append(arr)
-
-        # Concatenate chunks along scenario axis: (80, N)
         return {k: np.concatenate(v, axis=1) for k, v in chunk_metrics_all.items()}
 
-    # ── Step 1: Baseline rollout ─────────────────────────────────────
+    # ── Step 1: Baseline rollout (concept means fused — no 2nd pass) ─
     print("\n-> [1/N] Running BASELINE rollout (no ablation)...")
+    print("   (First run compiles XLA kernel — takes a few minutes, then fast)")
     t0 = perf_counter()
-    baseline_raw = run_rollout_correct(ablate_index=None, ablate_value=None)
+    baseline_raw = run_rollout(ablate_index=None, ablate_value=None)
+
+    # Extract concept population means from baseline rollout (free — already computed)
+    baseline_concepts_arr = np.array(baseline_raw.pop("concepts"))  # (80, N, C)
+    concept_means = baseline_concepts_arr.mean(axis=(0, 1))          # (C,)
+
     baseline_metrics = aggregate_task_metrics(baseline_raw)
     print(f"   Done in {perf_counter() - t0:.1f}s")
 
@@ -358,33 +329,9 @@ def main():
         if k in baseline_metrics:
             print(f"     {k:<32}  {baseline_metrics[k]:.4f}")
 
-    # ── Step 2: Compute population mean per concept (if needed) ──────
-    concept_means = None
-    if args.ablation_mode == "mean":
-        print("\n-> Computing concept population means from baseline...")
-        all_concepts = []
-        rng = jax.random.PRNGKey(0)
-        for ci in range(num_chunks):
-            start = ci * CHUNK
-            end   = min((ci + 1) * CHUNK, N)
-            size  = end - start
-            chunk      = jax.tree_util.tree_map(lambda x: x[start:end], scenarios)
-            rng, rk    = jax.random.split(rng)
-            reset_keys = jax.random.split(rk, size)
-            env_state  = jax.jit(env.reset)(chunk, reset_keys)
-            for _ in range(80):
-                c = get_concepts(env_state.observation)
-                all_concepts.append(np.array(c))   # (size, C)
-                raw_action = act_from_concepts(c)
-                action = wdatatypes.Action(
-                    data=raw_action,
-                    valid=jnp.ones((*raw_action.shape[:-1], 1), dtype=jnp.bool_),
-                )
-                env_state = env.step(env_state, action)
-        concept_means = np.concatenate(all_concepts, axis=0).mean(axis=0)  # (C,)
-        print(f"   Population means: {np.round(concept_means, 3).tolist()}")
+    print(f"\n   Population concept means: {np.round(concept_means, 3).tolist()}")
 
-    # ── Step 3: Ablation sweep ───────────────────────────────────────
+    # ── Step 2: Ablation sweep ───────────────────────────────────────
     ablation_results = []
     for concept_idx, concept_name in enumerate(concept_names):
         if args.ablation_mode == "mean":
@@ -398,7 +345,8 @@ def main():
               f"  Ablating '{concept_name}' → {mode_str}")
         t0 = perf_counter()
 
-        ablated_raw     = run_rollout_correct(ablate_index=concept_idx, ablate_value=ablate_val)
+        ablated_raw = run_rollout(ablate_index=concept_idx, ablate_value=ablate_val)
+        ablated_raw.pop("concepts", None)   # remove before metric aggregation
         ablated_metrics = aggregate_task_metrics(ablated_raw)
 
         dt = perf_counter() - t0
@@ -459,7 +407,7 @@ def main():
         "concept_phases": list(concept_phases),
         "ablation_mode":  args.ablation_mode,
         "baseline":       baseline_metrics,
-        "concept_means":  concept_means.tolist() if concept_means is not None else None,
+        "concept_means":  concept_means.tolist(),
         "ablations":      ablation_results,
     }
 
