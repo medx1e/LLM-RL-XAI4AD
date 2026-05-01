@@ -1,0 +1,473 @@
+#!/usr/bin/env python3
+"""CBM Concept Ablation Evaluation Script.
+
+For each concept, replaces its predicted value with a constant (either 0.0
+or the population mean computed from a baseline rollout) across ALL steps
+of ALL evaluation scenarios. Measures the resulting change in task metrics
+to quantify each concept's causal importance to the policy.
+
+Ablation modes:
+  --ablation_mode zero : set c[i] = 0.0 (simple, interpretable)
+  --ablation_mode mean : set c[i] = mean(c[i]) over all steps/scenarios
+                         (literature standard — blindfolds without shocking)
+
+Usage — scratch model:
+    python cbm_v1/eval_cbm_ablation.py \\
+        --checkpoint cbm_scratch_v2_lambda05/checkpoints/model_final.pkl \\
+        --config cbm_v1/config_womd_scratch.yaml \\
+        --data data/validation.tfrecord \\
+        --num_scenarios 1024 --num_concepts 15 --concept_phases 1 2 3
+
+Usage — frozen model:
+    python cbm_v1/eval_cbm_ablation.py \\
+        --checkpoint cbm_v2_frozen_womd_150gb/checkpoints/model_final.pkl \\
+        --pretrained_dir runs_rlc/womd_sac_road_perceiver_minimal_42 \\
+        --data data/validation.tfrecord \\
+        --num_scenarios 1024 --num_concepts 15 --concept_phases 1 2 3
+"""
+
+from __future__ import annotations
+
+import argparse
+import json
+import math
+import os
+import sys
+from pathlib import Path
+from time import perf_counter
+
+os.environ["XLA_PYTHON_CLIENT_PREALLOCATE"] = "false"
+
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "V-Max"))
+
+import jax
+import jax.numpy as jnp
+import numpy as np
+import yaml
+
+from waymax import dynamics, datatypes as wdatatypes
+from vmax.simulator import make_env_for_evaluation, make_data_generator
+from vmax.scripts.evaluate.utils import load_params
+
+from concepts.types import ObservationConfig
+from cbm_v1.config import CBMConfig
+import cbm_v1.cbm_sac_factory as cbm_factory
+
+
+# ── Config loading (reuse from eval_cbm_v2) ──────────────────────────
+
+def load_config_from_pretrained(pretrained_dir: str):
+    cfg_path = os.path.join(pretrained_dir, ".hydra", "config.yaml")
+    if not os.path.exists(cfg_path):
+        raise FileNotFoundError(
+            f"No .hydra/config.yaml found in {pretrained_dir}.\n"
+            f"If this is a scratch model, use --config instead of --pretrained_dir."
+        )
+    with open(cfg_path) as f:
+        cfg = yaml.safe_load(f)
+
+    obs_cfg_dict = cfg.get("observation_config", {})
+    termination_keys = cfg.get("termination_keys", ["offroad", "overlap", "run_red_light"])
+    enc_cfg = dict(cfg["network"]["encoder"])
+    enc_cfg["type"] = {"perceiver": "lq"}.get(enc_cfg.get("type", "none"), enc_cfg.get("type", "none"))
+    obs_type = {"road": "vec", "lane": "vec"}.get(cfg.get("observation_type", "vec"), "vec")
+    network_config = {
+        "encoder": enc_cfg,
+        "policy": cfg["algorithm"]["network"]["policy"],
+        "value": cfg["algorithm"]["network"]["value"],
+        "action_distribution": cfg["algorithm"]["network"].get("action_distribution", "gaussian"),
+        "_obs_type": obs_type,
+    }
+    return network_config, obs_cfg_dict, termination_keys, obs_type
+
+
+def load_config_from_yaml(yaml_path: str):
+    with open(yaml_path) as f:
+        cfg = yaml.safe_load(f)
+    if "network_config" not in cfg:
+        raise ValueError(f"No 'network_config' key found in {yaml_path}.")
+    obs_cfg_dict = cfg.get("observation_config", {})
+    termination_keys = cfg.get("termination_keys", ["offroad", "overlap", "run_red_light"])
+    obs_type = {"road": "vec", "lane": "vec"}.get(
+        cfg["network_config"].get("_obs_type", "vec"), "vec"
+    )
+    return cfg["network_config"], obs_cfg_dict, termination_keys, obs_type
+
+
+# ── Task metric aggregation (same as eval_cbm_v2) ────────────────────
+
+FINAL_STEP_METRICS = {"progress_ratio_nuplan", "sdc_progression", "log_divergence"}
+EVER_HAPPENED      = {"at_fault_collision", "offroad", "overlap", "run_red_light",
+                      "sdc_off_route", "sdc_wrongway", "on_multiple_lanes"}
+
+
+def aggregate_task_metrics(all_metrics: dict) -> dict:
+    """Aggregate raw (T, N) metric arrays into per-scenario scalars → means."""
+    rewards = np.array(all_metrics["reward"])
+    dones   = np.array(all_metrics["done"])
+    early_done = (dones[:-1] > 0.5).any(axis=0)
+    ep_returns = rewards.sum(axis=0)
+    accuracy   = float((~early_done).mean())
+
+    results = {
+        "accuracy":       accuracy,
+        "ep_return_mean": float(ep_returns.mean()),
+        "ep_return_std":  float(ep_returns.std()),
+    }
+    for key, arr_jnp in all_metrics.items():
+        if key in {"reward", "done"}:
+            continue
+        arr = np.array(arr_jnp)
+        if arr.ndim != 2:
+            continue
+        if key in FINAL_STEP_METRICS:
+            val = arr[-1]
+        elif key in EVER_HAPPENED:
+            val = (arr > 0.5).any(axis=0).astype(float)
+        else:
+            val = arr.max(axis=0)
+        results[key] = float(val.mean())
+
+    return results
+
+
+# ── Main ─────────────────────────────────────────────────────────────
+
+def main():
+    parser = argparse.ArgumentParser(description="CBM Concept Ablation")
+    parser.add_argument("--checkpoint", required=True, help="Path to CBM checkpoint .pkl")
+
+    grp = parser.add_mutually_exclusive_group(required=True)
+    grp.add_argument("--pretrained_dir", help="V-Max pretrained run dir (frozen/joint models)")
+    grp.add_argument("--config",         help="Training YAML path (scratch models)")
+
+    parser.add_argument("--data",          required=True,      help="Path to WOMD validation TFRecord")
+    parser.add_argument("--num_scenarios", type=int, default=1024)
+    parser.add_argument("--mode",          default="scratch",   choices=["frozen", "joint", "scratch"])
+    parser.add_argument("--num_concepts",  type=int, default=15)
+    parser.add_argument("--concept_phases",nargs="+", type=int, default=[1, 2, 3])
+    parser.add_argument("--ablation_mode", default="mean",      choices=["zero", "mean"],
+                        help="'mean' (literature standard) or 'zero'")
+    parser.add_argument("--output_dir",   default=None)
+    parser.add_argument("--chunk_size",   type=int, default=10)
+    args = parser.parse_args()
+
+    concept_phases = tuple(args.concept_phases)
+
+    print()
+    print("=" * 65)
+    print("CBM CONCEPT ABLATION")
+    print("=" * 65)
+    print(f"  Checkpoint     : {args.checkpoint}")
+    print(f"  Config src     : {args.pretrained_dir or args.config}")
+    print(f"  Data           : {args.data}")
+    print(f"  Scenarios      : {args.num_scenarios}")
+    print(f"  Mode           : {args.mode}")
+    print(f"  Concepts       : {args.num_concepts} (phases {concept_phases})")
+    print(f"  Ablation mode  : {args.ablation_mode}")
+    print()
+
+    # ── Load config ──────────────────────────────────────────────────
+    if args.pretrained_dir:
+        network_config, obs_cfg_dict, termination_keys, obs_type = \
+            load_config_from_pretrained(args.pretrained_dir)
+    else:
+        network_config, obs_cfg_dict, termination_keys, obs_type = \
+            load_config_from_yaml(args.config)
+
+    # ── Build environment ────────────────────────────────────────────
+    env = make_env_for_evaluation(
+        max_num_objects=64,
+        dynamics_model=dynamics.InvertibleBicycleModel(normalize_actions=True),
+        sdc_paths_from_data=True,
+        observation_type=obs_type,
+        observation_config=obs_cfg_dict,
+        termination_keys=termination_keys,
+        noisy_init=False,
+    )
+    observation_size = env.observation_spec()
+    action_size      = env.action_spec().data.shape[0]
+
+    # ── CBM setup ────────────────────────────────────────────────────
+    cbm_config = CBMConfig(
+        mode=args.mode,
+        num_concepts=args.num_concepts,
+        concept_phases=concept_phases,
+    )
+    concept_names = cbm_config.concept_names
+
+    unflatten_fn = env.get_wrapper_attr("features_extractor").unflatten_features
+    cbm_network = cbm_factory.make_networks(
+        observation_size=observation_size,
+        action_size=action_size,
+        unflatten_fn=unflatten_fn,
+        learning_rate=1e-4,
+        network_config=network_config,
+        cbm_config=cbm_config,
+    )
+    cbm_params = load_params(args.checkpoint)
+    dist       = cbm_network.parametric_action_distribution
+
+    # ── JIT helpers ──────────────────────────────────────────────────
+    policy_module = cbm_factory._cbm_policy_module
+
+    @jax.jit
+    def get_concepts(obs):
+        _, concepts = policy_module.apply(
+            cbm_params.policy, obs,
+            method=policy_module.encode_and_predict_concepts,
+        )
+        return concepts
+
+    @jax.jit
+    def act_from_concepts(concepts):
+        logits = policy_module.apply(
+            cbm_params.policy, concepts,
+            method=policy_module.act_from_concepts,
+        )
+        return dist.mode(logits)
+
+    # ── Load scenarios ───────────────────────────────────────────────
+    print(f"-> Loading {args.num_scenarios} scenarios...")
+    data_gen = make_data_generator(
+        path=args.data,
+        max_num_objects=64,
+        include_sdc_paths=True,
+        batch_dims=(args.num_scenarios,),
+        seed=0,
+        repeat=True,
+    )
+    scenarios = next(data_gen)
+    print("   Done.")
+
+    # cuSolver warm-up
+    _d = jnp.linalg.solve(jnp.eye(4, dtype=jnp.float32), jnp.ones(4, dtype=jnp.float32))
+    jax.block_until_ready(_d)
+
+    CHUNK = args.chunk_size
+    num_chunks = math.ceil(args.num_scenarios / CHUNK)
+    N = args.num_scenarios
+
+    # ── Generic rollout with optional ablation ────────────────────────
+
+    def run_rollout(ablate_index: int | None, ablate_value: float | None) -> dict:
+        """Run full rollout. If ablate_index is set, override c[ablate_index]=ablate_value."""
+        all_metrics_lists = {}
+        rng = jax.random.PRNGKey(0)
+
+        for i in range(num_chunks):
+            start = i * CHUNK
+            end   = min((i + 1) * CHUNK, N)
+            size  = end - start
+
+            chunk = jax.tree_util.tree_map(lambda x: x[start:end], scenarios)
+            rng, rk = jax.random.split(rng)
+            reset_keys = jax.random.split(rk, size)
+            env_state  = jax.jit(env.reset)(chunk, reset_keys)
+
+            for _ in range(80):
+                obs = env_state.observation
+                c   = get_concepts(obs)
+
+                if ablate_index is not None:
+                    c = c.at[..., ablate_index].set(ablate_value)
+
+                raw_action = act_from_concepts(c)
+                action = wdatatypes.Action(
+                    data=raw_action,
+                    valid=jnp.ones((*raw_action.shape[:-1], 1), dtype=jnp.bool_),
+                )
+                env_state = env.step(env_state, action)
+                metrics = {
+                    "reward": env_state.reward,
+                    "done":   env_state.done,
+                    **{k: v for k, v in env_state.metrics.items()},
+                }
+                for k, v in metrics.items():
+                    all_metrics_lists.setdefault(k, []).append(np.array(v))
+
+        # Stack: list of (size,) → (T, N) for each metric
+        stacked = {}
+        for k, vlist in all_metrics_lists.items():
+            arr = np.array(vlist)    # (T*num_chunks, size) — need to interleave carefully
+            # Reshape: each chunk contributed 80 steps; concat across chunks along scenario axis
+            # Actually vlist is [step_metric_chunk0, step_metric_chunk0, ...]
+            # We need (T=80, N) — build per-chunk then concatenate
+            stacked[k] = arr  # keep as-is; aggregate_task_metrics handles (T, N)
+
+        # Rebuild correctly: separate per-chunk then concatenate
+        return stacked
+
+    def run_rollout_correct(ablate_index: int | None, ablate_value: float | None) -> dict:
+        """Chunked rollout producing (T=80, N) metric arrays."""
+        chunk_metrics_all = {}   # key → list of (80, chunk_size) arrays
+        rng = jax.random.PRNGKey(0)
+
+        for ci in range(num_chunks):
+            start = ci * CHUNK
+            end   = min((ci + 1) * CHUNK, N)
+            size  = end - start
+
+            chunk      = jax.tree_util.tree_map(lambda x: x[start:end], scenarios)
+            rng, rk    = jax.random.split(rng)
+            reset_keys = jax.random.split(rk, size)
+            env_state  = jax.jit(env.reset)(chunk, reset_keys)
+
+            step_metrics = {}   # key → list of (size,) over 80 steps
+            for _ in range(80):
+                obs = env_state.observation
+                c   = get_concepts(obs)
+
+                if ablate_index is not None:
+                    c = c.at[..., ablate_index].set(float(ablate_value))
+
+                raw_action = act_from_concepts(c)
+                action = wdatatypes.Action(
+                    data=raw_action,
+                    valid=jnp.ones((*raw_action.shape[:-1], 1), dtype=jnp.bool_),
+                )
+                env_state = env.step(env_state, action)
+
+                m = {
+                    "reward": env_state.reward,
+                    "done":   env_state.done,
+                    **{k: v for k, v in env_state.metrics.items()},
+                }
+                for k, v in m.items():
+                    step_metrics.setdefault(k, []).append(np.array(v))
+
+            # Stack steps: (80, size)
+            for k, vlist in step_metrics.items():
+                arr = np.stack(vlist, axis=0)  # (80, size)
+                chunk_metrics_all.setdefault(k, []).append(arr)
+
+        # Concatenate chunks along scenario axis: (80, N)
+        return {k: np.concatenate(v, axis=1) for k, v in chunk_metrics_all.items()}
+
+    # ── Step 1: Baseline rollout ─────────────────────────────────────
+    print("\n-> [1/N] Running BASELINE rollout (no ablation)...")
+    t0 = perf_counter()
+    baseline_raw = run_rollout_correct(ablate_index=None, ablate_value=None)
+    baseline_metrics = aggregate_task_metrics(baseline_raw)
+    print(f"   Done in {perf_counter() - t0:.1f}s")
+
+    print(f"\n   Baseline results:")
+    for k in ["accuracy", "progress_ratio_nuplan", "at_fault_collision",
+              "run_red_light", "offroad"]:
+        if k in baseline_metrics:
+            print(f"     {k:<32}  {baseline_metrics[k]:.4f}")
+
+    # ── Step 2: Compute population mean per concept (if needed) ──────
+    concept_means = None
+    if args.ablation_mode == "mean":
+        print("\n-> Computing concept population means from baseline...")
+        all_concepts = []
+        rng = jax.random.PRNGKey(0)
+        for ci in range(num_chunks):
+            start = ci * CHUNK
+            end   = min((ci + 1) * CHUNK, N)
+            size  = end - start
+            chunk      = jax.tree_util.tree_map(lambda x: x[start:end], scenarios)
+            rng, rk    = jax.random.split(rng)
+            reset_keys = jax.random.split(rk, size)
+            env_state  = jax.jit(env.reset)(chunk, reset_keys)
+            for _ in range(80):
+                c = get_concepts(env_state.observation)
+                all_concepts.append(np.array(c))   # (size, C)
+                raw_action = act_from_concepts(c)
+                action = wdatatypes.Action(
+                    data=raw_action,
+                    valid=jnp.ones((*raw_action.shape[:-1], 1), dtype=jnp.bool_),
+                )
+                env_state = env.step(env_state, action)
+        concept_means = np.concatenate(all_concepts, axis=0).mean(axis=0)  # (C,)
+        print(f"   Population means: {np.round(concept_means, 3).tolist()}")
+
+    # ── Step 3: Ablation sweep ───────────────────────────────────────
+    ablation_results = []
+    for concept_idx, concept_name in enumerate(concept_names):
+        if args.ablation_mode == "mean":
+            ablate_val = float(concept_means[concept_idx])
+            mode_str   = f"mean ({ablate_val:.3f})"
+        else:
+            ablate_val = 0.0
+            mode_str   = "zero (0.0)"
+
+        print(f"\n-> [{concept_idx + 2}/{args.num_concepts + 1}]"
+              f"  Ablating '{concept_name}' → {mode_str}")
+        t0 = perf_counter()
+
+        ablated_raw     = run_rollout_correct(ablate_index=concept_idx, ablate_value=ablate_val)
+        ablated_metrics = aggregate_task_metrics(ablated_raw)
+
+        dt = perf_counter() - t0
+        print(f"   Done in {dt:.1f}s")
+
+        # Compute deltas (ablated - baseline; negative = degradation)
+        deltas = {
+            k: ablated_metrics.get(k, float("nan")) - baseline_metrics.get(k, float("nan"))
+            for k in baseline_metrics
+        }
+
+        entry = {
+            "concept":          concept_name,
+            "index":            concept_idx,
+            "ablation_mode":    args.ablation_mode,
+            "ablation_value":   ablate_val,
+            "metrics":          ablated_metrics,
+            "delta":            deltas,
+        }
+        ablation_results.append(entry)
+
+        # Print key deltas inline
+        for k in ["progress_ratio_nuplan", "at_fault_collision", "run_red_light"]:
+            delta = deltas.get(k, float("nan"))
+            flag  = "⚠️ " if abs(delta) > 0.05 else "  "
+            print(f"     {flag}{k:<32}  Δ={delta:+.4f}")
+
+    # ── Summary table ────────────────────────────────────────────────
+    print()
+    print("=" * 80)
+    print("ABLATION SUMMARY — Δ(ablated − baseline)")
+    print("=" * 80)
+    header = f"  {'Concept':<28}  {'ΔRouteProgress':>15}  {'ΔCollision':>11}  {'ΔRedLight':>10}"
+    print(header)
+    print("  " + "-" * 68)
+    for r in ablation_results:
+        d = r["delta"]
+        print(
+            f"  {r['concept']:<28}"
+            f"  {d.get('progress_ratio_nuplan', float('nan')):>+15.4f}"
+            f"  {d.get('at_fault_collision', float('nan')):>+11.4f}"
+            f"  {d.get('run_red_light', float('nan')):>+10.4f}"
+        )
+    print("=" * 80)
+
+    # ── Save results ─────────────────────────────────────────────────
+    output_dir = args.output_dir or os.path.dirname(args.checkpoint)
+    os.makedirs(output_dir, exist_ok=True)
+
+    results = {
+        "experiment":     "concept_ablation",
+        "checkpoint":     args.checkpoint,
+        "config_source":  args.pretrained_dir or args.config,
+        "data":           args.data,
+        "num_scenarios":  N,
+        "mode":           args.mode,
+        "num_concepts":   args.num_concepts,
+        "concept_phases": list(concept_phases),
+        "ablation_mode":  args.ablation_mode,
+        "baseline":       baseline_metrics,
+        "concept_means":  concept_means.tolist() if concept_means is not None else None,
+        "ablations":      ablation_results,
+    }
+
+    json_path = os.path.join(output_dir, "eval_ablation.json")
+    with open(json_path, "w") as f:
+        json.dump(results, f, indent=2)
+    print(f"\n-> Results saved: {json_path}")
+
+
+if __name__ == "__main__":
+    main()

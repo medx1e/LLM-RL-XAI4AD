@@ -193,6 +193,10 @@ def main():
     print(f"  Scan length     : {config['scan_length']}")
     print(f"  Learning rate   : {config['learning_rate']}")
     print(f"  Lambda concept  : {config['lambda_concept']}")
+    if config.get('lambda_anneal', False):
+        print(f"  Lambda annealing: ON  ({config['lambda_concept']} -> {config.get('lambda_min', 0.01)} cosine decay)")
+    else:
+        print(f"  Lambda annealing: OFF (constant)")
     print(f"  Buffer size     : {config['buffer_size']:,}")
     print(f"  Learning start  : {config['learning_start']:,}")
     print("=" * 60)
@@ -234,6 +238,9 @@ def main():
         log_freq=config["log_freq"],
         save_freq=config["save_freq"],
         seed=config["seed"],
+        lambda_anneal=config.get("lambda_anneal", False),
+        lambda_min=float(config.get("lambda_min", 0.01)),
+        lambda_anneal_steps=config.get("lambda_anneal_steps", None),
         observation_config_dict=observation_config_dict,
         network_config=network_config,
         encoder_remap=encoder_remap,

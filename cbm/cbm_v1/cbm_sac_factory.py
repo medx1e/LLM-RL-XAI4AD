@@ -28,6 +28,7 @@ from vmax.agents.networks.encoders import get_encoder
 
 from cbm_v1.config import CBMConfig
 from cbm_v1.concept_loss import concept_loss
+from cbm_v1.lambda_schedule import constant_lambda, cosine_anneal_lambda
 from cbm_v1.networks import CBMPolicyNetwork, CBMValueNetwork, ConceptHead
 
 
@@ -474,13 +475,26 @@ def make_sgd_step(
     tau: float,
     concept_targets_fn: callable,
     cbm_config: CBMConfig,
+    lambda_schedule_fn: callable | None = None,
+    total_env_steps: int = 15_000_000,
 ) -> datatypes.LearningFunction:
     """Create the SGD step function for CBM-SAC.
 
     concept_targets_fn: observations → (concept_targets, concept_valid)
         Must be JIT-safe. Takes flat observation tensor, returns normalized
         concept values and validity masks.
+    lambda_schedule_fn: optional callable(env_step, total_env_steps, lambda_max, lambda_min)
+        If None, a constant_lambda schedule is used (no annealing).
+        Must be JIT-safe (pure JAX). See lambda_schedule.py.
+    total_env_steps: Total environment steps used as the denominator for
+        the annealing schedule. Defaults to 15M.
     """
+    # Resolve schedule: fall back to constant if annealing is disabled
+    if lambda_schedule_fn is None:
+        lambda_schedule_fn = constant_lambda
+        lambda_min = cbm_config.lambda_concept   # constant = lambda_max = lambda_min
+    else:
+        lambda_min = getattr(cbm_config, "lambda_min", 0.01)
     policy_network = cbm_network.policy_network
     value_network = cbm_network.value_network
     dist = cbm_network.parametric_action_distribution
@@ -511,7 +525,7 @@ def make_sgd_step(
         return 0.5 * jnp.mean(jnp.square(value_error))
 
     def compute_policy_loss(
-        policy_params, value_params, transitions, key,
+        policy_params, value_params, transitions, key, env_step,
     ):
         obs = transitions.observation
 
@@ -537,7 +551,11 @@ def make_sgd_step(
 
         c_loss = concept_loss(concept_pred, concept_targets, concept_valid, cbm_config)
 
-        total = sac_loss + cbm_config.lambda_concept * c_loss
+        current_lambda = lambda_schedule_fn(
+            env_step, total_env_steps,
+            cbm_config.lambda_concept, lambda_min,
+        )
+        total = sac_loss + current_lambda * c_loss
         return total
 
     policy_update = networks.gradient_update_fn(
@@ -567,6 +585,7 @@ def make_sgd_step(
             training_state.params.value,
             transitions,
             key_policy,
+            training_state.env_steps,           # extra arg → env_step in compute_policy_loss
             optimizer_state=training_state.policy_optimizer_state,
         )
 
@@ -584,6 +603,12 @@ def make_sgd_step(
         )
         c_loss = concept_loss(concept_pred, concept_targets, concept_valid, cbm_config)
 
+        # Current annealed lambda (for logging/TensorBoard)
+        current_lambda = lambda_schedule_fn(
+            training_state.env_steps, total_env_steps,
+            cbm_config.lambda_concept, lambda_min,
+        )
+
         # Per-concept loss, prediction stats, binary accuracy, update ratio
         per_concept_metrics = _per_concept_losses(
             concept_pred, concept_targets, concept_valid, cbm_config
@@ -600,6 +625,7 @@ def make_sgd_step(
             "policy_loss": policy_loss,
             "concept_loss": c_loss,
             "value_loss": value_loss,
+            "lambda_concept": current_lambda,    # track annealing in TensorBoard
             "concept_task_grad_ratio": grad_ratio,
             **per_concept_metrics,
             **pred_stats,

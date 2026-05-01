@@ -39,6 +39,7 @@ from concepts.registry import extract_all_concepts
 
 from cbm_v1.config import CBMConfig
 from cbm_v1.networks import CBMPolicyNetwork
+from cbm_v1.lambda_schedule import cosine_anneal_lambda, constant_lambda
 import cbm_v1.cbm_sac_factory as cbm_factory
 
 logger = logging.getLogger(__name__)
@@ -122,14 +123,18 @@ def train(
     log_freq: int,
     save_freq: int,
     seed: int,
+    # Lambda annealing (optional — disabled by default for backward compat)
+    lambda_anneal: bool = False,
+    lambda_min: float = 0.01,
+    lambda_anneal_steps: int | None = None,
     # Observation config (from pretrained run)
-    observation_config_dict: dict,
-    network_config: dict,
-    encoder_remap: dict,
-    obs_type_remap: dict,
-    termination_keys: list,
-    reward_type: str,
-    reward_config: dict,
+    observation_config_dict: dict = None,
+    network_config: dict = None,
+    encoder_remap: dict = None,
+    obs_type_remap: dict = None,
+    termination_keys: list = None,
+    reward_type: str = "linear",
+    reward_config: dict = None,
     disable_tqdm: bool = False,
 ) -> None:
     """Train CBM-V1 on WOMD.
@@ -174,6 +179,11 @@ def train(
     print(f"  Encoder   : {('pretrained (' + pretrained_dir + ')') if pretrained_dir and mode != 'scratch' else 'SCRATCH (random init)'}")
     print(f"  Concepts  : {num_concepts} (phases {concept_phases})")
     print(f"  Data      : {data_path}")
+    if lambda_anneal:
+        _anneal_steps = lambda_anneal_steps or total_timesteps
+        print(f"  Lambda    : cosine anneal {cbm_config_lambda_concept:.3f} → {lambda_min:.3f} over {_anneal_steps:,} env steps")
+    else:
+        print(f"  Lambda    : constant {cbm_config_lambda_concept:.3f} (no annealing)")
 
     rng = jax.random.PRNGKey(seed)
     num_devices = jax.local_device_count()
@@ -251,6 +261,8 @@ def train(
         mode=mode,
         concept_phases=concept_phases,
     )
+    # store for logging reference
+    cbm_config_lambda_concept = lambda_concept
 
     # ── Networks ─────────────────────────────────────────────────────
     print("-> Initializing CBM networks...")
@@ -279,10 +291,22 @@ def train(
         raise RuntimeError("CBM policy module not registered. "
                            "Ensure make_networks was called first.")
 
+    # ── Lambda schedule ──────────────────────────────────────────────
+    _anneal_total = lambda_anneal_steps or total_timesteps
+    if lambda_anneal:
+        schedule_fn = cosine_anneal_lambda
+        print(f"   Lambda annealing: ON  (cosine, {cbm_config_lambda_concept:.3f} -> {lambda_min:.3f} over {_anneal_total:,} env steps)")
+    else:
+        schedule_fn = constant_lambda
+        lambda_min = lambda_concept   # constant schedule ignores lambda_min
+        print(f"   Lambda annealing: OFF (constant {lambda_concept:.3f})")
+
     sgd_step = cbm_factory.make_sgd_step(
         cbm_network, alpha, discount, tau,
         concept_targets_fn=concept_targets_fn,
         cbm_config=cbm_config,
+        lambda_schedule_fn=schedule_fn,
+        total_env_steps=_anneal_total,
     )
     print("   Done.")
 

@@ -247,7 +247,19 @@ def load_model(env, algorithm, config, model_path):
     make_policy = make_inference_fn(network)
     params = load_params(model_path)
 
-    return make_policy(params.policy, deterministic=True)
+    # Remap old param key names (perceiver/mgail -> lq_attention)
+    policy_params = params.policy
+    for old_key, new_key in [("perceiver_attention", "lq_attention"), ("mgail_attention", "lq_attention")]:
+        def _remap(p, old=old_key, new=new_key):
+            if isinstance(p, dict):
+                return {(new if k == old else k): _remap(v, old, new) for k, v in p.items()}
+            return p
+        import jax
+        needs = any(old_key in str(path) for path, _ in jax.tree_util.tree_leaves_with_path(policy_params))
+        if needs:
+            policy_params = _remap(policy_params)
+
+    return make_policy(policy_params, deterministic=True)
 
 
 def make_step_fn(env, type_step: str, policy_fn=None) -> callable:

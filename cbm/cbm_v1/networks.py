@@ -86,6 +86,19 @@ class CBMPolicyNetwork(nn.Module):
         concepts = self.concept_head(z)
         return z, concepts
 
+    def act_from_concepts(self, concepts: jax.Array) -> jax.Array:
+        """Run actor head on an externally-supplied concept vector.
+        
+        This enables concept intervention and ablation experiments:
+        callers can modify `concepts` before passing it here.
+        """
+        x = self.actor_fc(concepts)
+        x = nn.Dense(self.output_size, name="policy_output")(x)
+
+        if self.final_activation:
+            x = self.final_activation(x)
+        return x
+
 
 class CBMValueNetwork(nn.Module):
     """Value network with concept bottleneck, supporting twin Q-networks.
