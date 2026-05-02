@@ -181,9 +181,9 @@ def train(
     print(f"  Data      : {data_path}")
     if lambda_anneal:
         _anneal_steps = lambda_anneal_steps or total_timesteps
-        print(f"  Lambda    : cosine anneal {cbm_config_lambda_concept:.3f} → {lambda_min:.3f} over {_anneal_steps:,} env steps")
+        print(f"  Lambda    : cosine anneal {lambda_concept:.3f} → {lambda_min:.3f} over {_anneal_steps:,} env steps")
     else:
-        print(f"  Lambda    : constant {cbm_config_lambda_concept:.3f} (no annealing)")
+        print(f"  Lambda    : constant {lambda_concept:.3f} (no annealing)")
 
     rng = jax.random.PRNGKey(seed)
     num_devices = jax.local_device_count()
