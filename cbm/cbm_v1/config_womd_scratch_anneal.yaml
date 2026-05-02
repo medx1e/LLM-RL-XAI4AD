@@ -1,0 +1,128 @@
+# CBM Scratch V2 — LQ Encoder + Lambda Cosine Annealing (10GB)
+#
+# Identical to config_womd_scratch.yaml but adds cosine lambda annealing.
+# λ starts at 0.5 (concept learning phase), decays to 0.01 (RL driving phase).
+#
+# Motivation: The constant-λ 150GB scratch model achieved better concept quality
+# than the 10GB model but worse driving (0.640 vs 0.889 route progress).
+# Hypothesis: constant high-λ over many gradient steps drowns out the RL reward.
+# Lambda annealing front-loads concept supervision, then lets RL take over.
+#
+# Lambda schedule:
+#   λ(t) = 0.01 + 0.5 * (0.5 - 0.01) * (1 + cos(π * t / T))
+#   At t=0:   λ = 0.500  (full concept supervision)
+#   At t=T/2: λ = 0.255  (balanced)
+#   At t=T:   λ = 0.010  (RL dominates, concept supervision maintained)
+#
+# Usage (cluster):
+#   python cbm_v1/train_cbm.py --config cbm_v1/config_womd_scratch_anneal.yaml
+
+# ── Paths ─────────────────────────────────────────────────────────────
+data_path:   "data/training.tfrecord"
+output_dir:  "runs_cbm"
+run_name:    "cbm_scratch_lq_anneal_lambda05_womd_42"
+
+# ── CBM architecture ──────────────────────────────────────────────────
+mode:           "scratch"
+num_concepts:   15
+concept_phases: [1, 2, 3]
+lambda_concept: 0.5          # lambda_max (starting value)
+
+# ── Lambda annealing ──────────────────────────────────────────────────
+lambda_anneal:       true    # enable cosine annealing
+lambda_min:          0.01    # floor — never removes concept supervision
+lambda_anneal_steps: null    # null = use total_timesteps as denominator
+
+# ── Network config ────────────────────────────────────────────────────
+network_config:
+  encoder:
+    type: lq
+    embedding_layer_sizes: [256, 256]
+    embedding_activation: relu
+    encoder_depth: 4
+    dk: 64
+    num_latents: 16
+    latent_num_heads: 2
+    latent_head_features: 16
+    cross_num_heads: 2
+    cross_head_features: 16
+    ff_mult: 2
+    attn_dropout: 0.0
+    ff_dropout: 0.0
+    tie_layer_weights: true
+  policy:
+    type: mlp
+    layer_sizes: [256, 64, 32]
+    activation: relu
+    final_activation: null
+  value:
+    type: mlp
+    layer_sizes: [256, 64, 32]
+    activation: relu
+    final_activation: relu
+    num_networks: 2
+    shared_encoder: false
+  action_distribution: gaussian
+  _obs_type: vec
+
+# ── Observation config ────────────────────────────────────────────────
+observation_config:
+  obs_past_num_steps: 5
+  objects:
+    features: [waypoints, velocity, yaw, size, valid]
+    num_closest_objects: 8
+  roadgraphs:
+    features: [waypoints, direction, valid]
+    interval: 2
+    max_meters: 70
+    roadgraph_top_k: 200
+    meters_box:
+      front: 70
+      back: 5
+      left: 20
+      right: 20
+    max_num_lanes: 10
+    max_num_points_per_lane: 20
+  traffic_lights:
+    features: [waypoints, state, valid]
+    num_closest_traffic_lights: 5
+  path_target:
+    features: [waypoints]
+    num_points: 10
+    points_gap: 5
+
+# ── Termination & Reward ──────────────────────────────────────────────
+termination_keys: [offroad, overlap, run_red_light]
+reward_type: linear
+reward_config:
+  overlap:     -1.0
+  offroad:     -1.0
+  red_light:   -1.0
+  off_route:   -1.0
+  progression:  0.2
+
+# ── Parallelism / batch structure ─────────────────────────────────────
+num_parallel_envs:    1
+num_episodes_per_env: 8
+
+# ── Training schedule ─────────────────────────────────────────────────
+scan_length:       640
+scenario_length:    80
+unroll_length:       1
+total_timesteps: 15_000_000
+
+# ── SAC hyperparameters ───────────────────────────────────────────────
+alpha:              0.2
+discount:           0.99
+tau:                0.005
+learning_rate:      0.0001
+batch_size:         128
+grad_updates_per_step: 8
+buffer_size:      1_000_000
+learning_start:    50_000
+
+# ── Logging / checkpointing ───────────────────────────────────────────
+log_freq:    10
+save_freq:   1000
+seed:        42
+disable_tqdm: false
