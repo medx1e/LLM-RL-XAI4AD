@@ -106,7 +106,7 @@ num_parallel_envs:    1
 num_episodes_per_env: 8
 
 # ── Training schedule ─────────────────────────────────────────────────
-scan_length:        128   # 640 OOMs on MIG (too many intermediate activations)
+scan_length:        320   # half of original 640; halves scan peak memory
 scenario_length:     80
 unroll_length:        1
 total_timesteps: 15_000_000
@@ -116,9 +116,9 @@ alpha:              0.2
 discount:           0.99
 tau:                0.005
 learning_rate:      0.0001
-batch_size:          64   # halved to reduce gradient computation memory
-grad_updates_per_step: 4  # halved to reduce per-iter memory footprint
-buffer_size:        250_000  # 1M OOMs on 22GB MIG (obs_size=1655); 250k ≈ 3GB
+batch_size:         128
+grad_updates_per_step: 8
+buffer_size:        250_000
 learning_start:      10_000
 
 # ── Logging / checkpointing ───────────────────────────────────────────
