@@ -118,8 +118,8 @@ tau:                0.005
 learning_rate:      0.0001
 batch_size:         128
 grad_updates_per_step: 8
-buffer_size:      1_000_000
-learning_start:    10_000
+buffer_size:        250_000  # 1M OOMs on 22GB MIG (obs_size=1655); 250k ≈ 3GB
+learning_start:      10_000
 
 # ── Logging / checkpointing ───────────────────────────────────────────
 log_freq:    10
