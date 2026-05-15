@@ -146,13 +146,17 @@ def assign_event_type(risk_score: float) -> str:
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--model",       choices=list(MODELS.keys()), default=MODEL_KEY)
-    parser.add_argument("--n-scenarios", type=int,  default=N_SCENARIOS)
-    parser.add_argument("--data-path",   type=str,  default=None)
+    parser.add_argument("--model",        choices=list(MODELS.keys()), default=MODEL_KEY)
+    parser.add_argument("--n-scenarios",  type=int, default=N_SCENARIOS)
+    parser.add_argument("--data-path",    type=str, default=None,
+                        help="Path to training.tfrecord")
+    parser.add_argument("--runs-rlc",     type=str, default=None,
+                        help="Path to runs_rlc/ directory containing model weights")
     args = parser.parse_args()
 
     data_path = args.data_path or str(_CBM / "data" / "training.tfrecord")
-    model_dir = str(_CBM / "runs_rlc" / MODELS[args.model])
+    runs_rlc  = Path(args.runs_rlc) if args.runs_rlc else (_CBM / "runs_rlc")
+    model_dir = str(runs_rlc / MODELS[args.model])
 
     print(f"IG risk stratification | model={args.model} | n={args.n_scenarios} | IG_steps={N_IG_STEPS}")
 
