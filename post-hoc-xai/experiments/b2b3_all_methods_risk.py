@@ -199,7 +199,7 @@ def run_scenario(adapter, model, scenario, scenario_id):
     sd = adapter.extract_scenario_data(model, scenario, scenario_id=str(scenario_id))
     if sd.total_steps == 0 or sd.raw_observations is None:
         return None
-    cfg  = AnalysisConfig(n_scenarios=50)
+    cfg  = AnalysisConfig(n_scenarios=args.n_scenarios or int(ts_info["scenario_id"].max() + 1))
     risk = RiskComputer.from_scenario_data(sd, cfg)
     return {"raw_obs": np.array(sd.raw_observations), "collision_risk": np.array(risk.collision_risk), "T": sd.total_steps}
 
@@ -254,9 +254,11 @@ def agents_table_to_latex(table_df: pd.DataFrame, filename: Path):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--model",     choices=list(MODELS.keys()), default="complete")
-    parser.add_argument("--data-path", type=str, default=None)
-    parser.add_argument("--runs-rlc",  type=str, default=None)
+    parser.add_argument("--model",       choices=list(MODELS.keys()), default="complete")
+    parser.add_argument("--data-path",   type=str, default=None)
+    parser.add_argument("--runs-rlc",    type=str, default=None)
+    parser.add_argument("--n-scenarios", type=int, default=None,
+                        help="Number of scenarios to process. Defaults to all scenarios in B1 CSV.")
     args = parser.parse_args()
 
     data_path = args.data_path or str(_CBM / "data" / "training.tfrecord")
@@ -308,8 +310,8 @@ def main():
     data_gen = model._loaded.data_gen
     acc      = BaselineAccumulator()
 
-    # ── Run all 7 methods over 50 scenarios ────────────────────────────────────
-    n_scenarios  = ts_info["scenario_id"].max() + 1
+    # ── Run all 7 methods over scenarios present in B1 ────────────────────────
+    n_scenarios  = args.n_scenarios or int(ts_info["scenario_id"].max() + 1)
     all_rows     = []
 
     for scenario_id in range(n_scenarios):
