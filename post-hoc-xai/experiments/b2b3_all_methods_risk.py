@@ -199,7 +199,7 @@ def run_scenario(adapter, model, scenario, scenario_id):
     sd = adapter.extract_scenario_data(model, scenario, scenario_id=str(scenario_id))
     if sd.total_steps == 0 or sd.raw_observations is None:
         return None
-    cfg  = AnalysisConfig(n_scenarios=args.n_scenarios or int(ts_info["scenario_id"].max() + 1))
+    cfg  = AnalysisConfig(n_scenarios=50)
     risk = RiskComputer.from_scenario_data(sd, cfg)
     return {"raw_obs": np.array(sd.raw_observations), "collision_risk": np.array(risk.collision_risk), "T": sd.total_steps}
 
