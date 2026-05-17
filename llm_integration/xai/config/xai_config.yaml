@@ -1,0 +1,66 @@
+# =============================================================================
+# Attention-Grounded Counterfactual XRL Pipeline — Configuration
+# =============================================================================
+
+# Scoring thresholds
+necessity_threshold: 0.5
+grounding_threshold: 0.5
+
+# Frequencies (run every X steps)
+frequencies:
+  graph: 20 # build semantic graph
+  counterfactual: 20 # run rollouts
+  report: 20 # save JSON reports
+  plotting: 20 # save PNG graph plots
+  narration: 20 # narrate (requires narration_mode=online)
+
+# Rollout settings
+rollout_horizon_steps: 10
+
+# Attention extraction
+attention_layer_key: "cross_attn_0" # Which LQ cross-attention layer to use
+
+# Encoder token layout (must match LQEncoder input assembly)
+encoder_layout:
+  n_sdc_timesteps: 11
+  num_objects: 64
+  timestep_agent: 11
+  roadgraph_top_k: 1000
+  num_traffic_lights: 16
+  tl_timesteps: 1
+  gps_path_len: 80
+
+# Action templates (per context category)
+action_templates:
+  following:
+    - { label: "Gentle Brake", accel: -1.5, steer: 0.0 }
+    - { label: "Moderate Brake", accel: -3.0, steer: 0.0 }
+    - { label: "Hard Brake", accel: -4.0, steer: 0.0 }
+    - { label: "Maintain", accel: 0.0, steer: 0.0 }
+    - { label: "Gentle Accelerate", accel: 1.0, steer: 0.0 }
+  threat_approaching:
+    - { label: "Emergency Brake", accel: -6.0, steer: 0.0 }
+    - { label: "Hard Brake", accel: -4.0, steer: 0.0 }
+    - { label: "Evasive Left", accel: -2.0, steer: 0.10 }
+    - { label: "Evasive Right", accel: -2.0, steer: -0.10 }
+  free_flow:
+    - { label: "Moderate Accelerate", accel: 2.0, steer: 0.0 }
+    - { label: "Strong Accelerate", accel: 3.5, steer: 0.0 }
+    - { label: "Maintain", accel: 0.0, steer: 0.0 }
+    - { label: "Lane Change Left", accel: 0.0, steer: 0.08 }
+    - { label: "Lane Change Right", accel: 0.0, steer: -0.08 }
+  near_boundary:
+    - { label: "Steer Correction Inward", accel: 0.0, steer: 0.05 }
+    - { label: "Maintain", accel: 0.0, steer: 0.0 }
+
+# Narration / LLM settings
+llm:
+  provider: "llama"
+  base_url: "http://localhost:11434/chat/completions"
+  model: "llama3:latest"
+  max_tokens: 256
+  api_key_env: "DUMMY_KEY"
+  enable_thinking: false
+
+narration_mode: "offline" # "offline" = save reports first, narrate later
+# "online"  = narrate during eval loop

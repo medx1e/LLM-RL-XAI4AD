@@ -72,3 +72,21 @@ platform_cache/
 # ============== pdf& images ==============
 *.pdf
 *.png
+
+# ============== LLM Integration ==============
+llm_integration/data/
+llm_integration/vmax_venv/
+llm_integration/videos/
+llm_integration/runs/
+llm_integration/.env
+llm_integration/.env.local
+llm_integration/*.egg-info/
+llm_integration/.deepeval/
+llm_integration/.pytest_cache/
+llm_integration/.vscode/
+llm_integration/.agent/
+llm_integration/.agents/
+
+llm_integration/FORCED*
+llm_integration/hsi_*
+llm_integration/xai_eval
