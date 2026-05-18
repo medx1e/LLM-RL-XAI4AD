@@ -22,8 +22,13 @@ Outputs (under data/llm_narration/):
 Usage:
     python scripts/precompute_llm_narration.py --phase all
     python scripts/precompute_llm_narration.py --phase reports --scenarios 0 1 2
+    python scripts/precompute_llm_narration.py --phase narrations --llm gpt
     python scripts/precompute_llm_narration.py --phase narrations \\
-        --llms llama gpt --toggles full minimal
+        --llm claude --toggles full minimal
+
+To process a different LLM: edit `active:` in config/llm_narration.yaml and
+re-run, or pass --llm <key>. Each run writes one set of files; existing
+narrations from other LLMs stay on disk.
 """
 
 from __future__ import annotations
@@ -71,6 +76,8 @@ os.environ.setdefault("XLA_PYTHON_CLIENT_PREALLOCATE", "false")
 # ─── Imports that require the path bootstrap above ──────────────────────────
 import platform  # noqa: E402  triggers shared path setup
 from platform.llm_narration import (  # noqa: E402
+    ACTIVE_LLM_KEY,
+    ACTIVE_TOGGLE_COMBOS,
     DATA_ROOT,
     DRIVING_MODELS,
     LLM_MODELS,
@@ -479,10 +486,20 @@ def _generate_narrations_for_combo(
 def run_phase_2_narrations(
     scenarios: list[int],
     driving_model_keys: list[str],
-    llm_keys: list[str],
+    llm_key: str,
     toggle_keys: list[str],
     force: bool,
 ) -> None:
+    """Generate narrations for ONE LLM across the (scenario × model × toggle) grid."""
+    if llm_key not in LLM_MODELS:
+        print(
+            f"[narrations] unknown LLM key '{llm_key}'. "
+            f"Known: {sorted(LLM_MODELS.keys())}"
+        )
+        return
+    llm_cfg = LLM_MODELS[llm_key]
+    print(f"[narrations] LLM = {llm_key}  ({llm_cfg.get('display', llm_cfg.get('model'))})")
+
     for dm_key in driving_model_keys:
         entry = PLATFORM_MODELS.get(dm_key)
         if entry is None:
@@ -496,31 +513,26 @@ def run_phase_2_narrations(
                     f"run phase 1 first."
                 )
                 continue
-            for llm_key in llm_keys:
-                if llm_key not in LLM_MODELS:
-                    print(f"[narrations] unknown LLM key '{llm_key}' — skipping.")
+            for tk in toggle_keys:
+                if tk not in TOGGLE_COMBOS:
+                    print(f"[narrations] unknown toggle key '{tk}' — skipping.")
                     continue
-                llm_cfg = LLM_MODELS[llm_key]
-                for tk in toggle_keys:
-                    if tk not in TOGGLE_COMBOS:
-                        print(f"[narrations] unknown toggle key '{tk}' — skipping.")
-                        continue
-                    out_path = get_narrations_path(s, dm_key, llm_key, tk)
-                    if out_path.is_file() and not force:
-                        print(f"  [skip] {out_path.relative_to(DATA_ROOT)} (exists)")
-                        continue
+                out_path = get_narrations_path(s, dm_key, llm_key, tk)
+                if out_path.is_file() and not force:
+                    print(f"  [skip] {out_path.relative_to(DATA_ROOT)} (exists)")
+                    continue
 
-                    out_path.parent.mkdir(parents=True, exist_ok=True)
-                    t0 = time.time()
-                    entries = _generate_narrations_for_combo(
-                        reports, llm_cfg, TOGGLE_COMBOS[tk],
-                    )
-                    with open(out_path, "w") as f:
-                        json.dump(entries, f, indent=2)
-                    print(
-                        f"  ✓ {out_path.relative_to(DATA_ROOT)} "
-                        f"({len(entries)} events, {time.time()-t0:.1f}s)"
-                    )
+                out_path.parent.mkdir(parents=True, exist_ok=True)
+                t0 = time.time()
+                entries = _generate_narrations_for_combo(
+                    reports, llm_cfg, TOGGLE_COMBOS[tk],
+                )
+                with open(out_path, "w") as f:
+                    json.dump(entries, f, indent=2)
+                print(
+                    f"  ✓ {out_path.relative_to(DATA_ROOT)} "
+                    f"({len(entries)} events, {time.time()-t0:.1f}s)"
+                )
 
 
 # =============================================================================
@@ -547,11 +559,14 @@ def _parse_args() -> argparse.Namespace:
         help="PLATFORM_MODELS keys to process (full label, may need quoting).",
     )
     ap.add_argument(
-        "--llms", nargs="*", default=list(LLM_MODELS.keys()),
-        help="LLM keys (from llm_narration.LLM_MODELS) to run in phase 2.",
+        "--llm", default=ACTIVE_LLM_KEY,
+        help=(
+            "Which LLM to run in phase 2 (single key from config/llm_narration.yaml::llms). "
+            "Defaults to the YAML's `active:` value."
+        ),
     )
     ap.add_argument(
-        "--toggles", nargs="*", default=list(TOGGLE_COMBOS.keys()),
+        "--toggles", nargs="*", default=ACTIVE_TOGGLE_COMBOS,
         help="Toggle combo keys to materialize in phase 2.",
     )
     ap.add_argument(
@@ -586,13 +601,19 @@ def main() -> None:
 
     if args.phase in ("narrations", "all"):
         print("\n=== PHASE 2 — narrations ===")
-        run_phase_2_narrations(
-            scenarios=args.scenarios,
-            driving_model_keys=args.driving_models,
-            llm_keys=args.llms,
-            toggle_keys=args.toggles,
-            force=args.force,
-        )
+        if args.llm is None:
+            print(
+                "[narrations] no LLM selected — set `active:` in "
+                "config/llm_narration.yaml or pass --llm <key>."
+            )
+        else:
+            run_phase_2_narrations(
+                scenarios=args.scenarios,
+                driving_model_keys=args.driving_models,
+                llm_key=args.llm,
+                toggle_keys=args.toggles,
+                force=args.force,
+            )
 
     print("\n✅ Done.")
 

@@ -1,0 +1,72 @@
+# =============================================================================
+# LLM Narration — Configuration
+# =============================================================================
+# Mirrors the spirit of llm_integration/xai/config/xai_config.yaml — a single
+# YAML that the precompute script and the platform UI both read.
+#
+# Workflow:
+#   1. Edit `active:` (or pass --llm <key>) to choose which LLM the next
+#      precompute run will use.
+#   2. Run `python scripts/precompute_llm_narration.py --phase narrations`.
+#      A new file `<key>__<toggle>.json` is written under each scenario's
+#      narrations/ directory.
+#   3. Repeat for another LLM. Old narrations stay on disk; the UI lists
+#      every (llm, toggle) pair it finds.
+# =============================================================================
+
+# Which LLM the next precompute run uses by default. Must be a key in `llms:`.
+# CLI flag `--llm <key>` overrides this without editing the file.
+active: llama
+
+# All toggle combos to materialize per precompute run. Comment out any you
+# don't want produced. Filesystem key conventions:
+#   full              grounding ON  · counterfactual ON
+#   no_grounding      grounding OFF · counterfactual ON
+#   no_counterfactual grounding ON  · counterfactual OFF
+#   minimal           grounding OFF · counterfactual OFF
+toggle_combos:
+  - full
+  - no_grounding
+  - no_counterfactual
+  - minimal
+
+# Registry of all LLMs the platform knows about. Each entry produces a
+# distinct family of `<key>__<toggle>.json` files. Add a new LLM by appending
+# a new top-level key here — no Python edits required.
+#
+# Field semantics mirror llm_integration/xai/narration/llm_narrator.py:
+#   display          UI label in the Streamlit dropdown
+#   provider         Free-form tag (groq/openai/anthropic/openrouter/local/…)
+#   model            Exact model id sent in the API payload
+#   base_url         Chat-completions endpoint
+#   api_key_env      Name of the env-var holding the API key
+#   max_tokens       Generation budget
+#   enable_thinking  Pass-through to llm_narrator (Qwen-style models)
+llms:
+
+  llama:
+    display: "Llama 3.1 70B (Groq)"
+    provider: "groq"
+    model: "llama-3.1-70b-versatile"
+    base_url: "https://api.groq.com/openai/v1/chat/completions"
+    api_key_env: "GROQ_API_KEY"
+    max_tokens: 400
+    enable_thinking: false
+
+  gpt:
+    display: "GPT-4o (OpenAI)"
+    provider: "openai"
+    model: "gpt-4o"
+    base_url: "https://api.openai.com/v1/chat/completions"
+    api_key_env: "OPENAI_API_KEY"
+    max_tokens: 400
+    enable_thinking: false
+
+  claude:
+    display: "Claude 3.5 Sonnet (OpenRouter)"
+    provider: "openrouter"
+    model: "anthropic/claude-3.5-sonnet"
+    base_url: "https://openrouter.ai/api/v1/chat/completions"
+    api_key_env: "OPENROUTER_API_KEY"
+    max_tokens: 400
+    enable_thinking: false

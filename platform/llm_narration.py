@@ -25,6 +25,7 @@ from pathlib import Path
 from typing import Optional
 
 import streamlit as st
+import yaml
 
 import platform  # path bootstrap (idempotent)
 from platform.shared.bev_component import render_bev_player
@@ -57,43 +58,53 @@ DRIVING_MODEL_SLUGS: dict[str, str] = {
     "SAC Wayformer — WOMD seed 42": "wayformer",
 }
 
-# LLM registry. Each entry mirrors the `llm:` sub-dict expected by
-# llm_integration/xai/narration/llm_narrator.py (OpenRouter-style payload).
-LLM_MODELS: dict[str, dict] = {
-    "llama": {
-        "display":      "Llama 3.1 70B (Groq)",
-        "provider":     "groq",
-        "model":        "llama-3.1-70b-versatile",
-        "base_url":     "https://api.groq.com/openai/v1/chat/completions",
-        "api_key_env":  "GROQ_API_KEY",
-        "max_tokens":   400,
-    },
-    "gpt": {
-        "display":      "GPT-4o (OpenAI)",
-        "provider":     "openai",
-        "model":        "gpt-4o",
-        "base_url":     "https://api.openai.com/v1/chat/completions",
-        "api_key_env":  "OPENAI_API_KEY",
-        "max_tokens":   400,
-    },
-    "claude": {
-        "display":      "Claude 3.5 Sonnet (OpenRouter)",
-        "provider":     "openrouter",
-        "model":        "anthropic/claude-3.5-sonnet",
-        "base_url":     "https://openrouter.ai/api/v1/chat/completions",
-        "api_key_env":  "OPENROUTER_API_KEY",
-        "max_tokens":   400,
-    },
-}
+# Path to the LLM-narration YAML config (registry + active LLM + toggle combos).
+# Mirrors the spirit of llm_integration/xai/config/xai_config.yaml: a single
+# file the precompute script and the platform both read.
+LLM_CONFIG_PATH: Path = _PROJECT_ROOT / "config" / "llm_narration.yaml"
 
-# Toggle combinations. The precompute pipeline materializes one narration
-# file per combo; the UI lets the user pick at viewing time.
+
+def _load_llm_config(path: Path = LLM_CONFIG_PATH) -> dict:
+    """Read the LLM narration YAML. Returns an empty config on missing file."""
+    if not path.is_file():
+        return {"active": None, "llms": {}, "toggle_combos": []}
+    with open(path, "r") as fh:
+        cfg = yaml.safe_load(fh) or {}
+    cfg.setdefault("active", None)
+    cfg.setdefault("llms", {})
+    cfg.setdefault("toggle_combos", [])
+    return cfg
+
+
+_LLM_CONFIG: dict = _load_llm_config()
+
+# LLM registry — loaded from config/llm_narration.yaml::llms. Each value
+# mirrors the `llm:` sub-dict expected by llm_narrator.py (provider, model,
+# base_url, api_key_env, max_tokens, enable_thinking), plus a UI `display`.
+LLM_MODELS: dict[str, dict] = _LLM_CONFIG["llms"]
+
+# Default LLM key for a new precompute run (overridable via --llm). Falls
+# back to the first registry entry if `active:` is missing or wrong.
+ACTIVE_LLM_KEY: Optional[str] = (
+    _LLM_CONFIG["active"]
+    if _LLM_CONFIG["active"] in LLM_MODELS
+    else (next(iter(LLM_MODELS), None))
+)
+
+# Toggle combinations. Filesystem keys (`<key>__<toggle>.json`) MUST match
+# the keys here; the dict is the source of truth for which combos exist.
 TOGGLE_COMBOS: dict[str, dict] = {
     "full":              {"grounding": True,  "counterfactual": True},
     "no_grounding":      {"grounding": False, "counterfactual": True},
     "no_counterfactual": {"grounding": True,  "counterfactual": False},
     "minimal":           {"grounding": False, "counterfactual": False},
 }
+
+# Subset of TOGGLE_COMBOS the next precompute run materializes. Comes from
+# the YAML's `toggle_combos:` list; falls back to every combo we know.
+ACTIVE_TOGGLE_COMBOS: list[str] = [
+    k for k in _LLM_CONFIG["toggle_combos"] if k in TOGGLE_COMBOS
+] or list(TOGGLE_COMBOS.keys())
 
 
 def toggle_key_from_flags(grounding: bool, counterfactual: bool) -> str:
