@@ -38,12 +38,14 @@ st.set_page_config(
 
 import platform  # path bootstrap  # noqa: E402 (must run after set_page_config)
 from platform.tabs import tab_home, tab_posthoc, tab_cbm  # noqa: E402
+from platform import llm_narration  # noqa: E402
 
 
 _TABS = {
     "Home": tab_home,
     "Post-hoc XAI": tab_posthoc,
     "CBM Explorer": tab_cbm,
+    "LLM Narration": llm_narration,
 }
 
 with st.sidebar:
