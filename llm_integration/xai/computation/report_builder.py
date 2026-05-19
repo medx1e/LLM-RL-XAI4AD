@@ -30,7 +30,7 @@ def build(
     Args:
         step: Simulation step index.
         timestamp_s: Timestamp in seconds.
-        ego_state: ``{ego_velocity, ego_action}`` from SemanticGraphBuilder.
+        ego_state: ``{ego_velocity, ego_motion_state}`` from SemanticGraphBuilder.
         chosen_action: ``{label, accel, steer, outcome, ...}`` for the
             agent's actual action.
         context_categories: Active scene labels.

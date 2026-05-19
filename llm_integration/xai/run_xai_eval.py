@@ -466,11 +466,22 @@ def run_xai_eval(args):
             }
 
             report = None
-            if step_count % f_report == 0:
+            if step_count > 0 and step_count % f_report == 0:
+                # Always recompute ego_state fresh from the *current* pre-step
+                # state so it matches the action the policy chose this step,
+                # even if the graph hasn't been rebuilt recently.
+                fresh_st = state_to_dict(current_transition.state)
+                ego_vx = float(fresh_st["current"]["vx"][ego_idx])
+                ego_vy = float(fresh_st["current"]["vy"][ego_idx])
+                fresh_ego_state = {
+                    "ego_velocity": round(math.sqrt(ego_vx**2 + ego_vy**2), 2),
+                    "ego_motion_state": graph_builder.determine_action_state(ego_vx, ego_vy),
+                }
+
                 report = report_builder.build(
                     step=step_count,
                     timestamp_s=step_count * 0.1,
-                    ego_state=graph["scenario_info"],
+                    ego_state=fresh_ego_state,
                     chosen_action=chosen_action,
                     context_categories=context_categories,
                     scene_edges=graph["semantic_edges"],

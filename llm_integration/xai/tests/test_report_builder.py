@@ -12,7 +12,7 @@ from xai.computation import report_builder
 MOCK_REPORT_ARGS = dict(
     step=40,
     timestamp_s=4.0,
-    ego_state={"ego_velocity": 12.5, "ego_action": "moving"},
+    ego_state={"ego_velocity": 12.5, "ego_motion_state": "cruising"},
     chosen_action={
         "label": "Maintain",
         "accel": 0.0,

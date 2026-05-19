@@ -158,7 +158,7 @@ def _build_detailed(report: Dict[str, Any]) -> str:
         f"=== DRIVING REPORT ===\n\n"
 
         f"[EGO STATE]\n"
-        f"  Action: {ego.get('ego_action', 'moving')}\n"
+        f"  Motion State: {ego.get('ego_motion_state', 'moving')}\n"
         f"  Velocity: {ego.get('ego_velocity', '?')} m/s\n\n"
 
         f"[NEARBY AGENTS]\n"
@@ -218,7 +218,7 @@ def _build_brief(report: Dict[str, Any]) -> str:
         f"=== DRIVING REPORT ===\n\n"
 
         f"[EGO STATE]\n"
-        f"  Action: {ego.get('ego_action', 'moving')}\n"
+        f"  Motion State: {ego.get('ego_motion_state', 'moving')}\n"
         f"  Velocity: {ego.get('ego_velocity', '?')} m/s\n\n"
 
         f"[NEARBY AGENTS]\n"
