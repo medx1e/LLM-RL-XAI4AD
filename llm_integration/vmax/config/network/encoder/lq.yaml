@@ -1,0 +1,17 @@
+defaults:
+  - _self_
+
+type: lq
+embedding_layer_sizes: [256, 256]
+embedding_activation: relu
+encoder_depth: 4
+dk: 64
+num_latents: 16
+latent_num_heads: 2
+latent_head_features: 16
+cross_num_heads: 2
+cross_head_features: 16
+ff_mult: 2
+attn_dropout: 0.0
+ff_dropout: 0.0
+tie_layer_weights: true

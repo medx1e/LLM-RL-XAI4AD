@@ -1,0 +1,39 @@
+NOTICE
+======
+
+This project includes code from external libraries under various open-source
+licenses. See LICENSE for full details.
+
+
+Modifications
+-------------
+
+The following files have been modified from the original Waymax simulator:
+
+vmax/simulator/overrides/visualization/viz.py:
+ - Modified visualization functions for bounding boxes to support custom colors and transparency
+ - Enhanced object type-specific coloring for different agents
+ - Added visualization support for SDC paths
+
+vmax/simulator/overrides/visualization/utils.py:
+ - Enhanced bounding box plotting with support for overlap visualization
+ - Improved alpha transparency handling
+
+vmax/simulator/overrides/datatypes/roadgraph.py:
+ - Added filter_box_roadgraph_points to filter roadgraph within rectangular regions
+ - Modified filter_topk_roadgraph_points to preserve original point ordering by lane
+ - Added helper functions for rectangle rotation and point containment tests
+
+vmax/simulator/overrides/datatypes/observation.py:
+ - Added transform_sdc_paths for coordinate frame transformations
+ - Enhanced sdc_observation_from_state with rectangular filtering options
+ - Improved SDC paths handling and filtering
+
+vmax/simulator/overrides/datatypes/route.py:
+ - Added filter_sdc_paths function to filter route paths based on reference points
+
+
+Acknowledgments
+---------------
+
+We would like to thank the authors and contributors of the third-party components used in this project.

@@ -1,0 +1,160 @@
+{
+  "checkpoint_step": -1,
+  "checkpoint": "model_final.pkl",
+  "methodology": "within_module_distributional",
+  "analysis_modes": [
+    "option_a_consistent",
+    "option_b_risk_dependent"
+  ],
+  "hsi_threshold": 0.3,
+  "heads": {
+    "0": {
+      "name": "Proximity Head",
+      "description": "Within agent module, prioritizes nearby vehicles",
+      "expected_sign": "negative",
+      "specialized": true,
+      "primary_feature": "vehicle_attn_vs_distance",
+      "hsi": 0.4113458415818072,
+      "correlation": -0.4113458415818072,
+      "ci_95": [
+        -0.5639910378378724,
+        -0.23151860483298672
+      ],
+      "n_qualifying_episodes": 20,
+      "frac_significant": 0.0,
+      "risk_profile": {
+        "n_calm": 1451,
+        "n_danger": 56,
+        "calm_max_vehicle_frac": 0.2357947524870617,
+        "danger_max_vehicle_frac": 0.2631425442440169,
+        "max_frac_gap": 0.027347791756955203,
+        "calm_vehicle_entropy": 1.970779849446124,
+        "danger_vehicle_entropy": 1.926437429019383,
+        "entropy_gap": -0.04434242042674086,
+        "calm_rg_concentration": 0.7401034338200689,
+        "danger_rg_concentration": 0.7755802373522098,
+        "rg_conc_gap": 0.03547680353214089,
+        "calm_tl_max_frac": 0.42017460099423365,
+        "danger_tl_max_frac": 0.4008957935231073,
+        "tl_gap": -0.01927880747112637,
+        "calm_gps_com": 0.7833157366140994,
+        "danger_gps_com": 0.41829711903951,
+        "gps_com_gap": -0.36501861757458937,
+        "calm_sdc_recency": 0.9993570958462715,
+        "danger_sdc_recency": 1.092291407143882,
+        "sdc_recency_gap": 0.09293431129761054
+      }
+    },
+    "1": {
+      "name": "Proximity Head",
+      "description": "Within agent module, prioritizes nearby vehicles",
+      "expected_sign": "negative",
+      "specialized": true,
+      "primary_feature": "vehicle_attn_vs_distance",
+      "hsi": 0.41088955194406873,
+      "correlation": 0.41088955194406873,
+      "ci_95": [
+        0.3278105452793447,
+        0.4876624079314692
+      ],
+      "n_qualifying_episodes": 20,
+      "frac_significant": 0.0,
+      "risk_profile": {
+        "n_calm": 1451,
+        "n_danger": 56,
+        "calm_max_vehicle_frac": 0.9999999998356867,
+        "danger_max_vehicle_frac": 1.0,
+        "max_frac_gap": 1.6431334071143056e-10,
+        "calm_vehicle_entropy": 2.228647150737485e-09,
+        "danger_vehicle_entropy": 0.0,
+        "entropy_gap": -2.228647150737485e-09,
+        "calm_rg_concentration": 0.7478224836839902,
+        "danger_rg_concentration": 0.762376815668296,
+        "rg_conc_gap": 0.01455433198430578,
+        "calm_tl_max_frac": 0.31558954025612956,
+        "danger_tl_max_frac": 0.3531347076807703,
+        "tl_gap": 0.03754516742464076,
+        "calm_gps_com": 0.9308349747418074,
+        "danger_gps_com": 0.9375,
+        "gps_com_gap": 0.0066650252581925695,
+        "calm_sdc_recency": 2.633454309514226,
+        "danger_sdc_recency": 2.5753090732854687,
+        "sdc_recency_gap": -0.05814523622875756
+      }
+    },
+    "2": {
+      "name": "Proximity Head",
+      "description": "Within agent module, prioritizes nearby vehicles",
+      "expected_sign": "negative",
+      "specialized": true,
+      "primary_feature": "vehicle_attn_vs_distance",
+      "hsi": 0.36449354025702535,
+      "correlation": 0.36449354025702535,
+      "ci_95": [
+        0.30028251682913826,
+        0.42541593431105856
+      ],
+      "n_qualifying_episodes": 20,
+      "frac_significant": 0.0,
+      "risk_profile": {
+        "n_calm": 1451,
+        "n_danger": 56,
+        "calm_max_vehicle_frac": 0.9999135295577414,
+        "danger_max_vehicle_frac": 1.0,
+        "max_frac_gap": 8.647044225862377e-05,
+        "calm_vehicle_entropy": 0.00030571806126602574,
+        "danger_vehicle_entropy": 0.0,
+        "entropy_gap": -0.00030571806126602574,
+        "calm_rg_concentration": 0.8078307658369278,
+        "danger_rg_concentration": 0.8224283997932643,
+        "rg_conc_gap": 0.014597633956336509,
+        "calm_tl_max_frac": 0.43971674295230867,
+        "danger_tl_max_frac": 0.49910698511770796,
+        "tl_gap": 0.05939024216539929,
+        "calm_gps_com": 0.48072332967645115,
+        "danger_gps_com": 0.4375,
+        "gps_com_gap": -0.04322332967645115,
+        "calm_sdc_recency": 4.0,
+        "danger_sdc_recency": 4.0,
+        "sdc_recency_gap": 0.0
+      }
+    },
+    "3": {
+      "name": "Proximity Head",
+      "description": "Within agent module, prioritizes nearby vehicles",
+      "expected_sign": "negative",
+      "specialized": true,
+      "primary_feature": "vehicle_attn_vs_distance",
+      "hsi": 0.4050679103719464,
+      "correlation": 0.4050679103719464,
+      "ci_95": [
+        0.32386360332381214,
+        0.4803477302757698
+      ],
+      "n_qualifying_episodes": 20,
+      "frac_significant": 0.0,
+      "risk_profile": {
+        "n_calm": 1451,
+        "n_danger": 56,
+        "calm_max_vehicle_frac": 0.9997019234153832,
+        "danger_max_vehicle_frac": 1.0,
+        "max_frac_gap": 0.0002980765846167799,
+        "calm_vehicle_entropy": 0.00047415095660357305,
+        "danger_vehicle_entropy": 0.0,
+        "entropy_gap": -0.00047415095660357305,
+        "calm_rg_concentration": 0.8607383193240231,
+        "danger_rg_concentration": 0.9015746511376,
+        "rg_conc_gap": 0.04083633181357693,
+        "calm_tl_max_frac": 0.3638888086063298,
+        "danger_tl_max_frac": 0.36543433368206024,
+        "tl_gap": 0.001545525075730414,
+        "calm_gps_com": 0.45086807953783936,
+        "danger_gps_com": 0.31473946297496774,
+        "gps_com_gap": -0.13612861656287162,
+        "calm_sdc_recency": 1.475717011775266,
+        "danger_sdc_recency": 1.5774709806439822,
+        "sdc_recency_gap": 0.10175396886871613
+      }
+    }
+  }
+}

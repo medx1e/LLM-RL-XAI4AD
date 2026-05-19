@@ -1,0 +1,17 @@
+defaults:
+  - _self_
+  - encoder: none
+
+policy:
+    type: mlp
+    layer_sizes: ${algorithm.network.policy.layer_sizes}
+    activation: ${algorithm.network.policy.activation}
+    final_activation: ${algorithm.network.policy.final_activation}
+value:
+    type: mlp
+    layer_sizes: ${algorithm.network.value.layer_sizes}
+    activation: ${algorithm.network.value.activation}
+    final_activation: ${algorithm.network.value.final_activation}
+    num_networks: ${algorithm.network.value.num_networks}
+    shared_encoder: ${algorithm.network.value.shared_encoder}
+action_distribution: gaussian # gaussian, beta
