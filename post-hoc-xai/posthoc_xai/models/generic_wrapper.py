@@ -52,7 +52,8 @@ class GenericWrapper(ExplainableModel):
         needs_batch = observation.ndim == 1
         obs = observation[None, :] if needs_batch else observation
 
-        logits = self._policy_module.apply(self._policy_params, obs)
+        # PolicyNetwork.__call__ returns (logits, attn_weights) — unpack.
+        logits, _attn_weights = self._policy_module.apply(self._policy_params, obs)
 
         action_mean = logits[..., : self._action_size]
         action_log_std = logits[..., self._action_size :]
@@ -73,7 +74,8 @@ class GenericWrapper(ExplainableModel):
         action_idx: Optional[int] = None,
     ) -> jnp.ndarray:
         obs = observation[None, :]
-        logits = self._policy_module.apply(self._policy_params, obs)
+        # PolicyNetwork.__call__ returns (logits, attn_weights) — unpack.
+        logits, _attn_weights = self._policy_module.apply(self._policy_params, obs)
         action_mean = logits[0, : self._action_size]
 
         if action_idx is not None:
@@ -84,7 +86,8 @@ class GenericWrapper(ExplainableModel):
         # For the generic wrapper, return the full logits as "embedding"
         # since we can't easily isolate the encoder output without capture_intermediates
         obs = observation[None, :] if observation.ndim == 1 else observation
-        logits = self._policy_module.apply(self._policy_params, obs)
+        # PolicyNetwork.__call__ returns (logits, attn_weights) — unpack.
+        logits, _attn_weights = self._policy_module.apply(self._policy_params, obs)
         if observation.ndim == 1:
             return logits[0]
         return logits

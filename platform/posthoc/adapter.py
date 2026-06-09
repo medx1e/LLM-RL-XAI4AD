@@ -95,6 +95,33 @@ def has_cached_attention(model_key: str, scenario_idx: int) -> bool:
     return _attention_path(model_key, scenario_idx).exists()
 
 
+def list_posthoc_scenarios(model_key: str) -> list[int]:
+    """Return scenario indices that have Post-hoc data cached on disk.
+
+    A scenario "has Post-hoc data" when at least one attribution series
+    (``scenario_{idx:04d}_attr_*.pkl``) or an attention series
+    (``scenario_{idx:04d}_attention.pkl``) exists for it.
+
+    This deliberately excludes scenarios for which only an artifact and BEV
+    frames were precomputed (e.g. by ``precompute_narration_artifacts.py`` for
+    the LLM Narration tab), which share the same ``platform_cache/{slug}/``
+    namespace but carry no attributions/attention.  Those should not surface
+    in the Post-hoc scenario selector.
+    """
+    cache_dir = _cache_dir(model_key)
+    if not cache_dir.exists():
+        return []
+
+    indices: set[int] = set()
+    for pattern in ("scenario_*_attr_*.pkl", "scenario_*_attention.pkl"):
+        for f in cache_dir.glob(pattern):
+            try:
+                indices.add(int(f.stem.split("_")[1]))
+            except (IndexError, ValueError):
+                pass
+    return sorted(indices)
+
+
 # ---------------------------------------------------------------------------
 # Model loading (for dev fallback + precompute only)
 # ---------------------------------------------------------------------------

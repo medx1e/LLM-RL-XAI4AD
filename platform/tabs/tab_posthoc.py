@@ -12,18 +12,28 @@ from __future__ import annotations
 
 import math
 
-import matplotlib.pyplot as plt
 import numpy as np
 import streamlit as st
 
 import platform  # path bootstrap
-from platform.shared.bev_component import render_bev_player, render_bev_frame
+from platform.shared.bev_component import render_bev_player, render_bev_frame, schedule_bev_rerun
 from platform.shared.contracts import XAINotReadyError
 from platform.shared.model_catalog import PLATFORM_MODELS
-from platform.shared.scenario_store import get_available_scenarios, load_artifact
+from platform.shared.scenario_store import load_artifact
+from platform.shared.html_components import (
+    context_strip, heatmap_table, empty_state,
+)
+from platform.shared.charts import (
+    category_importance_chart, entity_importance_chart,
+    attribution_timeline_chart, episode_info_chart,
+    attention_entity_chart, category_focus_chart,
+    temporal_stability_chart,
+)
+from platform.shared.theme import AGENT_COLORS
 from platform.posthoc.adapter import (
     has_cached_attention,
     list_cached_methods,
+    list_posthoc_scenarios,
     load_attribution_series,
     load_attention_series,
 )
@@ -32,10 +42,6 @@ from platform.posthoc.viz import (
     aggregate_attention_by_entity,
     make_attention_overlay_fn,
     plot_attention_by_entity,
-    plot_attribution_timeline,
-    plot_category_importance,
-    plot_entity_importance,
-    plot_episode_info,
 )
 
 
@@ -67,127 +73,170 @@ def _ensure_attn(model_key, scenario_idx):
 # ---------------------------------------------------------------------------
 
 def render() -> None:
-    st.title("Post-hoc XAI Explorer")
+    primary_keys = [k for k, e in PLATFORM_MODELS.items() if e.is_primary]
+    if not primary_keys:
+        st.markdown(context_strip("Post-hoc XAI Explorer"), unsafe_allow_html=True)
+        st.markdown(empty_state("No primary models found."), unsafe_allow_html=True)
+        return
 
-    # ── Sidebar ──────────────────────────────────────────────────────────────
-    with st.sidebar:
-        st.header("Controls")
+    # ── Layout: 260px control rail + flexible analysis area ──────────────────
+    rail, content = st.columns([1, 4], gap="medium")
 
-        primary_keys = [k for k, e in PLATFORM_MODELS.items() if e.is_primary]
-        if not primary_keys:
-            st.error("No primary models found.")
-            return
-
-        model_key = st.selectbox("Model", options=primary_keys, key="posthoc__model_key")
-
-        available_scenarios = get_available_scenarios(model_key)
-        if not available_scenarios:
-            st.warning(f"No cached scenarios for **{model_key}**.")
-            return
-
-        scenario_idx = st.selectbox(
-            "Scenario",
-            options=available_scenarios,
-            format_func=lambda i: f"Scenario {i}",
-            key="posthoc__scenario_idx",
+    with rail:
+        st.markdown(
+            "<div class='xai-rail' style='background:#25283a;border:1px solid #3b3f55;"
+            "border-radius:12px;padding:14px;margin-top:8px;"
+            "box-shadow:0 1px 0 rgba(255,255,255,0.02) inset,0 8px 24px rgba(0,0,0,0.25);'>"
+            "<div style='font-size:11px;font-weight:700;text-transform:uppercase;"
+            "letter-spacing:0.12em;color:#a7a8b3;margin-bottom:8px;'>Selection</div>",
+            unsafe_allow_html=True,
         )
+        model_key = st.selectbox("Model", options=primary_keys, key="posthoc__model_key")
+        # Only list scenarios that actually have Post-hoc data (attributions /
+        # attention) cached. Scenarios carrying just an artifact + BEV frames —
+        # e.g. those precomputed for the LLM Narration tab — share the same
+        # platform_cache namespace but must not appear here.
+        available_scenarios = list_posthoc_scenarios(model_key)
+        if not available_scenarios:
+            scenario_idx = None
+        else:
+            scenario_idx = st.selectbox(
+                "Scenario",
+                options=available_scenarios,
+                format_func=lambda i: f"Scenario {i}",
+                key="posthoc__scenario_idx",
+            )
+        st.markdown("</div>", unsafe_allow_html=True)
 
-        st.divider()
-        cached_methods = list_cached_methods(model_key, scenario_idx)
+        cached_methods = list_cached_methods(model_key, scenario_idx) if scenario_idx is not None else []
+        st.markdown(
+            "<div style='font-size:11px;font-weight:700;text-transform:uppercase;"
+            "letter-spacing:0.12em;color:#a7a8b3;margin:14px 0 8px;'>Methods</div>",
+            unsafe_allow_html=True,
+        )
         if not cached_methods:
-            st.warning("No cached attributions. Run precompute script.")
+            st.markdown(empty_state("No cached attributions."), unsafe_allow_html=True)
             selected_methods = []
         else:
             selected_methods = st.multiselect(
                 "Attribution methods",
                 options=cached_methods,
                 default=cached_methods[:2] if len(cached_methods) >= 2 else cached_methods,
-                help="Select one or more methods to compare side-by-side",
                 key="posthoc__methods",
+                label_visibility="collapsed",
             )
 
-        st.divider()
-        st.subheader("Display options")
+        st.markdown(
+            "<div style='font-size:11px;font-weight:700;text-transform:uppercase;"
+            "letter-spacing:0.12em;color:#a7a8b3;margin:14px 0 8px;'>Display</div>",
+            unsafe_allow_html=True,
+        )
         top_n = st.slider(
-            "Top entities shown",
-            min_value=5, max_value=30, value=10,
-            help="Number of highest-importance entities in the bar chart",
+            "Top-N entities", min_value=5, max_value=30, value=10,
             key="posthoc__top_n",
         )
         normalize_entities = st.checkbox(
-            "Normalize entities (relative share)",
-            value=False,
-            help="Rescale entity bars to sum=1, so bars show each entity's relative share of importance",
-            key="posthoc__normalize",
+            "Normalize entities", value=False, key="posthoc__normalize",
         )
         normalize_per_token = st.checkbox(
-            "Category: per-token importance",
-            value=False,
-            help="Divide category bar by its token count — fair cross-category comparison (roadgraph has 200 tokens vs 5 for SDC)",
-            key="posthoc__per_token",
+            "Per-token category", value=False, key="posthoc__per_token",
         )
 
-    # ── Load artifact ────────────────────────────────────────────────────────
-    artifact = load_artifact(model_key, scenario_idx)
-    if artifact is None:
-        st.error(f"Could not load artifact for {model_key} / scenario {scenario_idx}.")
-        return
+    # ── Content column ────────────────────────────────────────────────────────
+    with content:
+        st.markdown(context_strip("Post-hoc XAI Explorer"), unsafe_allow_html=True)
 
-    entry = PLATFORM_MODELS[model_key]
-
-    # ── Main two-column layout ────────────────────────────────────────────────
-    col_bev, col_xai = st.columns([1, 1], gap="medium")
-
-    with col_bev:
-        st.subheader("Episode Replay")
-        if artifact.notes:
-            st.caption(artifact.notes)
-        step = render_bev_player(artifact, key_prefix="posthoc")
-        if artifact.interesting_timesteps:
-            st.caption("Flagged: " + ", ".join(str(t) for t in artifact.interesting_timesteps))
-
-        # Episode info panel
-        st.subheader("Episode Statistics")
-        rewards = np.array(artifact.scenario_data.rewards)
-        dones   = np.array(artifact.scenario_data.dones).astype(bool)
-        crash_steps = np.where(dones)[0]
-
-        c1, c2, c3 = st.columns(3)
-        c1.metric("Cumulative reward", f"{rewards.sum():.2f}")
-        c2.metric("Reward @ step", f"{rewards[step]:.3f}")
-        c3.metric("Episode outcome", "✕ Done" if dones.any() else "✓ Complete")
-
-        fig_ep = plot_episode_info(artifact, current_step=step)
-        st.pyplot(fig_ep, use_container_width=True)
-
-    with col_xai:
-        st.subheader("Attribution Analysis")
-        if not selected_methods:
-            st.info("Select at least one attribution method in the sidebar.")
-        else:
-            for method in selected_methods:
-                _render_method_block(
-                    artifact, step, method, top_n, normalize_entities,
-                    normalize_per_token, model_key, scenario_idx,
-                )
-
-    # ── Attention section (Perceiver only) ────────────────────────────────────
-    has_attn = entry.has_attention and has_cached_attention(model_key, scenario_idx)
-    if has_attn:
-        st.divider()
-        _render_attention_section(artifact, model_key, scenario_idx, step)
-    elif entry.has_attention:
-        st.divider()
-        st.info("Attention not cached yet. Re-run `precompute_posthoc_demo.py`.")
-
-    # ── Evaluation report ─────────────────────────────────────────────────────
-    if selected_methods:
-        st.divider()
-        with st.expander("Evaluation Report", expanded=False):
-            _render_evaluation_report(
-                artifact, model_key, scenario_idx, step,
-                selected_methods, has_attn,
+        if scenario_idx is None:
+            st.markdown(
+                empty_state(
+                    f"No cached scenarios for {model_key}.",
+                    icon="◫",
+                    hint="Run the precompute script to generate cached scenarios.",
+                    command="python scripts/precompute_posthoc_demo.py",
+                ),
+                unsafe_allow_html=True,
             )
+            return
+
+        artifact = load_artifact(model_key, scenario_idx)
+        if artifact is None:
+            st.markdown(
+                empty_state(f"Could not load artifact for {model_key} / scenario {scenario_idx}."),
+                unsafe_allow_html=True,
+            )
+            return
+
+        entry = PLATFORM_MODELS[model_key]
+
+        # Two-column analysis grid: BEV | methods
+        col_bev, col_xai = st.columns([1, 1], gap="medium")
+
+        with col_bev:
+            st.markdown(
+                "<h3 style='font-size:16px;font-weight:700;color:#f4f4f7;"
+                "font-family:Inter,sans-serif;margin:0 0 10px;'>Episode Replay</h3>",
+                unsafe_allow_html=True,
+            )
+            if artifact.notes:
+                st.caption(artifact.notes)
+            step = render_bev_player(artifact, key_prefix="posthoc")
+            if artifact.interesting_timesteps:
+                st.caption("Flagged: " + ", ".join(str(t) for t in artifact.interesting_timesteps))
+
+            rewards = np.array(artifact.scenario_data.rewards)
+            dones   = np.array(artifact.scenario_data.dones).astype(bool)
+            c1, c2, c3 = st.columns(3)
+            c1.metric("Cumulative", f"{rewards.sum():.2f}")
+            c2.metric("@ step",     f"{rewards[step]:.3f}")
+            c3.metric("Outcome",    "✕ Done" if dones.any() else "✓ Complete")
+
+            with st.expander("Reward curves", expanded=False):
+                fig_ep = episode_info_chart(artifact, current_step=step)
+                st.plotly_chart(fig_ep, width="stretch", config={"displayModeBar": False})
+
+        with col_xai:
+            st.markdown(
+                "<h3 style='font-size:16px;font-weight:700;color:#f4f4f7;"
+                "font-family:Inter,sans-serif;margin:0 0 10px;'>Attribution Analysis</h3>",
+                unsafe_allow_html=True,
+            )
+            if not selected_methods:
+                st.markdown(
+                    empty_state("Select at least one attribution method on the left."),
+                    unsafe_allow_html=True,
+                )
+            else:
+                # One tab per method keeps the column the height of a single
+                # chart (aligned with the BEV) instead of stacking N charts.
+                method_tabs = st.tabs(
+                    [m.replace("_", " ").title() for m in selected_methods]
+                )
+                for tab, method in zip(method_tabs, selected_methods):
+                    with tab:
+                        _render_method_block(
+                            artifact, step, method, top_n, normalize_entities,
+                            normalize_per_token, model_key, scenario_idx,
+                        )
+
+        # Full-width attention panel
+        has_attn = entry.has_attention and has_cached_attention(model_key, scenario_idx)
+        if has_attn:
+            st.markdown("<div style='height:8px;'></div>", unsafe_allow_html=True)
+            _render_attention_section(artifact, model_key, scenario_idx, step)
+        elif entry.has_attention:
+            st.markdown(
+                empty_state("Attention not cached yet.",
+                            command="python scripts/precompute_posthoc_demo.py"),
+                unsafe_allow_html=True,
+            )
+
+        # Collapsible evaluation report (last block)
+        if selected_methods:
+            with st.expander("Evaluation Report", expanded=False):
+                _render_evaluation_report(
+                    artifact, model_key, scenario_idx, step,
+                    selected_methods, has_attn,
+                )
 
 
 # ---------------------------------------------------------------------------
@@ -209,29 +258,35 @@ def _render_method_block(
 
     attribution = series[step]
 
-    with st.expander(
+    st.caption(
         f"**{attribution.method_name}** — step {step + 1}/{artifact.num_steps} "
-        f"({attribution.computation_time_ms:.0f} ms)",
-        expanded=True,
-    ):
-        tab_cat, tab_ent, tab_timeline = st.tabs(
-            ["Category", "Entities", "Timeline"]
+        f"({attribution.computation_time_ms:.0f} ms)"
+    )
+    view = st.segmented_control(
+        "chart_view",
+        options=["Category", "Entities", "Timeline"],
+        default="Category",
+        key=f"sc_posthoc_{method}",
+        label_visibility="collapsed",
+    )
+    if view == "Entities":
+        st.plotly_chart(
+            entity_importance_chart(attribution, top_n=top_n, normalize=normalize),
+            width='stretch',
+            config={"displayModeBar": False},
         )
-        with tab_cat:
-            st.pyplot(
-                plot_category_importance(attribution, normalize_per_token=normalize_per_token),
-                use_container_width=True,
-            )
-        with tab_ent:
-            st.pyplot(
-                plot_entity_importance(attribution, top_n=top_n, normalize=normalize),
-                use_container_width=True,
-            )
-        with tab_timeline:
-            st.pyplot(
-                plot_attribution_timeline(series, method_name=attribution.method_name, current_step=step),
-                use_container_width=True,
-            )
+    elif view == "Timeline":
+        st.plotly_chart(
+            attribution_timeline_chart(series, method_name=attribution.method_name, current_step=step),
+            width='stretch',
+            config={"displayModeBar": False},
+        )
+    else:
+        st.plotly_chart(
+            category_importance_chart(attribution, normalize_per_token=normalize_per_token),
+            width='stretch',
+            config={"displayModeBar": False},
+        )
 
 
 # ---------------------------------------------------------------------------
@@ -301,23 +356,11 @@ def _render_evaluation_report(
 
     cats = sorted(all_cats)
     if cats:
-        fig, ax = plt.subplots(figsize=(9, max(2.5, len(cats) * 0.55)))
-        x = np.arange(len(cats))
-        bw = 0.8 / max(len(selected_methods), 1)
-        for i, m in enumerate(selected_methods):
-            vals = [cat_data[m].get(c, 0.0) for c in cats]
-            offset = (i - len(selected_methods) / 2 + 0.5) * bw
-            ax.barh(x + offset, vals, height=bw,
-                    label=m.replace("_", " "),
-                    color=_METHOD_PALETTE[i % len(_METHOD_PALETTE)], alpha=0.85)
-        ax.set_yticks(x)
-        ax.set_yticklabels(cats)
-        ax.set_xlabel("Normalised importance")
-        ax.legend(fontsize=8)
-        ax.set_title("Attribution by category — all methods at current step")
-        fig.tight_layout()
-        st.pyplot(fig, use_container_width=True)
-        plt.close(fig)
+        st.plotly_chart(
+            category_focus_chart(cat_data, selected_methods),
+            width='stretch',
+            config={"displayModeBar": False},
+        )
 
         # Agreement callout
         dominant = {m: max(cat_data[m], key=cat_data[m].get, default="n/a")
@@ -348,23 +391,12 @@ def _render_evaluation_report(
             i, j = selected_methods.index(na), selected_methods.index(nb)
             mat[i, j] = mat[j, i] = rho
 
-        fig, ax = plt.subplots(figsize=(max(3, n * 1.3), max(2.5, n * 1.1)))
-        masked = np.ma.masked_invalid(mat)
-        im = ax.imshow(masked, vmin=-1, vmax=1, cmap="RdYlGn", aspect="auto")
-        short = [m.replace("_", "\n") for m in selected_methods]
-        ax.set_xticks(range(n)); ax.set_xticklabels(short, fontsize=8)
-        ax.set_yticks(range(n)); ax.set_yticklabels(short, fontsize=8)
-        for i in range(n):
-            for j in range(n):
-                v = mat[i, j]
-                if not math.isnan(v):
-                    ax.text(j, i, f"{v:.2f}", ha="center", va="center", fontsize=9,
-                            color="black" if abs(v) < 0.7 else "white")
-        plt.colorbar(im, ax=ax, label="Spearman ρ", fraction=0.046)
-        ax.set_title("Pairwise attribution agreement")
-        fig.tight_layout()
-        st.pyplot(fig, use_container_width=True)
-        plt.close(fig)
+        short = [m.replace("_", " ") for m in selected_methods]
+        matrix_list = [[float(mat[i, j]) for j in range(n)] for i in range(n)]
+        st.markdown(
+            heatmap_table(matrix_list, short, short, title="Pairwise attribution agreement (Spearman ρ)"),
+            unsafe_allow_html=True,
+        )
 
         valid_rhos = [v for v in pairs.values() if not math.isnan(v)]
         if valid_rhos:
@@ -402,31 +434,17 @@ def _render_evaluation_report(
                 for i, rho in enumerate(rhos[:n_agents]):
                     mat[i, j] = rho
 
-            fig, ax = plt.subplots(figsize=(max(4, n_methods * 1.5), max(3, n_agents * 0.7)))
-            masked = np.ma.masked_invalid(mat)
-            im = ax.imshow(masked, vmin=-1, vmax=1, cmap="RdYlGn", aspect="auto")
-
-            ax.set_xticks(range(n_methods))
-            ax.set_xticklabels([m.replace("_", "\n") for m in selected_methods], fontsize=8)
-            ax.set_yticks(range(n_agents))
-            ax.set_yticklabels([f"A{i}" for i in range(n_agents)], fontsize=8)
-
-            # Colour the y-tick labels with agent identity colours
-            for tick, color in zip(ax.get_yticklabels(), AGENT_ID_COLORS):
-                tick.set_color(color)
-
-            for i in range(n_agents):
-                for j in range(n_methods):
-                    v = mat[i, j]
-                    if not math.isnan(v):
-                        ax.text(j, i, f"{v:.2f}", ha="center", va="center",
-                                fontsize=8, color="black" if abs(v) < 0.65 else "white")
-
-            plt.colorbar(im, ax=ax, label="Spearman ρ (attn vs. attr)", fraction=0.046)
-            ax.set_title("Attention–attribution alignment per agent slot")
-            fig.tight_layout()
-            st.pyplot(fig, use_container_width=True)
-            plt.close(fig)
+            method_labels = [m.replace("_", " ") for m in selected_methods]
+            agent_labels  = [f"A{i}" for i in range(n_agents)]
+            matrix_list   = [[float(mat[i, j]) for j in range(n_methods)] for i in range(n_agents)]
+            st.markdown(
+                heatmap_table(
+                    matrix_list, agent_labels, method_labels,
+                    title="Attention–attribution alignment (Spearman ρ per agent slot)",
+                    row_colors=AGENT_ID_COLORS,
+                ),
+                unsafe_allow_html=True,
+            )
 
             # Summary interpretation
             valid = mat[~np.isnan(mat)]
@@ -511,6 +529,8 @@ def _render_attention_section(artifact, model_key: str, scenario_idx: int, step:
             selected_agents = None
 
     # Side-by-side BEV + bar chart — critical for colour matching
+    entity_weights = aggregate_attention_by_entity(attn_dict, key=chosen_key, artifact=artifact, step=step)
+
     if show_overlay:
         col_map, col_bars = st.columns([1, 1], gap="small")
         with col_map:
@@ -521,14 +541,19 @@ def _render_attention_section(artifact, model_key: str, scenario_idx: int, step:
                 caption=f"Identity colours — digit = slot index ({chosen_key})",
             )
         with col_bars:
-            fig = plot_attention_by_entity(
-                attn_dict, key=chosen_key, artifact=artifact, step=step,
-            )
-            if fig:
-                st.pyplot(fig, use_container_width=True)
+            if entity_weights:
+                st.plotly_chart(
+                    attention_entity_chart(entity_weights),
+                    width='stretch',
+                    config={"displayModeBar": False},
+                )
     else:
-        fig = plot_attention_by_entity(
-            attn_dict, key=chosen_key, artifact=artifact, step=step,
-        )
-        if fig:
-            st.pyplot(fig, use_container_width=True)
+        if entity_weights:
+            st.plotly_chart(
+                attention_entity_chart(entity_weights),
+                width='stretch',
+                config={"displayModeBar": False},
+            )
+
+    # Trigger rerun for BEV playback after all content is rendered.
+    schedule_bev_rerun()

@@ -81,6 +81,7 @@ import cbm_v1.cbm_sac_factory as cbm_factory
 import platform  # our package
 from platform.shared.contracts import PlatformScenarioArtifact
 from platform.shared.scenario_store import save_artifact
+from platform.shared.model_catalog import PLATFORM_MODELS
 from bev_visualizer.rollout_engine import ScenarioData
 
 # ── Constants ─────────────────────────────────────────────────────────
@@ -91,7 +92,10 @@ NUM_CONCEPTS   = 15
 CONCEPT_PHASES = (1, 2, 3)
 NUM_STEPS      = 80
 
-_PLATFORM_CACHE = _PROJECT_ROOT / "platform_cache" / "CBM_Scratch_V2"
+# Use the same cache_slug the platform's scenario_store reads from, so the
+# precomputed artifacts are discoverable by the CBM tab (the slug derives from
+# the full model key, e.g. "CBM_Scratch_V2_λ_0_5", NOT a hardcoded shortname).
+_PLATFORM_CACHE = _PROJECT_ROOT / "platform_cache" / PLATFORM_MODELS[CBM_MODEL_KEY].cache_slug
 
 
 # ── Config loading (scratch model — no hydra) ─────────────────────────

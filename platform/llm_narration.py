@@ -28,7 +28,11 @@ import streamlit as st
 import yaml
 
 import platform  # path bootstrap (idempotent)
-from platform.shared.bev_component import render_bev_player
+from platform.shared.bev_component import (
+    is_bev_playing,
+    render_bev_player,
+    schedule_bev_rerun,
+)
 from platform.shared.model_catalog import PLATFORM_MODELS
 from platform.shared.scenario_store import load_artifact
 
@@ -352,6 +356,22 @@ def _ensure_reports(scenario_idx, model_key, num_steps):
     return st.session_state[k]
 
 
+def _streaming_variant(slot_key: str, timestep: Optional[int]) -> int:
+    """Return a 0/1 flag that flips each time ``timestep`` changes for a slot.
+
+    The streaming narration card swaps its animation-name on this flag to
+    restart the token reveal on every new narration. The value is stable while
+    a narration is forward-filled (``timestep`` unchanged), so the card HTML
+    stays byte-identical across BEV reruns and the reveal does not re-trigger.
+    """
+    state_key = f"{slot_key}__seq"
+    last_ts, count = st.session_state.get(state_key, (None, 0))
+    if timestep != last_ts:
+        count += 1
+        st.session_state[state_key] = (timestep, count)
+    return count % 2
+
+
 # =============================================================================
 # AVAILABILITY HELPERS — used by sidebar selectors
 # =============================================================================
@@ -384,56 +404,67 @@ def available_narration_combos(
 # UI HELPERS
 # =============================================================================
 
-def _render_narration_box(entry: Optional[NarrationEntry], header: str = "Narration") -> None:
-    """Tone-coloured narration card."""
+def _render_narration_box(
+    entry: Optional[NarrationEntry],
+    header: str = "Narration",
+    streaming: bool = False,
+    variant: int = 0,
+) -> None:
+    """Tone-coloured narration card using the shared HTML component.
+
+    When ``streaming`` is True the body reveals token-by-token (demo flourish).
+    ``variant`` flips per new narration so the reveal restarts each time; see
+    ``_streaming_variant`` and ``narration_card_streaming``.
+    """
+    from platform.shared.html_components import (
+        narration_card,
+        narration_card_streaming,
+        empty_state,
+    )
     if entry is None:
-        st.info("No narration available yet at this timestep.")
+        st.markdown(
+            empty_state("No narration available yet at this timestep."),
+            unsafe_allow_html=True,
+        )
         return
-
-    color = TONE_COLORS.get(entry.tone, "#6b7280")
-    label = TONE_LABELS.get(entry.tone, entry.tone.upper())
-
-    badge = (
-        f"<span style='background:{color};color:white;padding:2px 8px;"
-        f"border-radius:4px;font-size:0.75rem;font-weight:600;"
-        f"letter-spacing:0.05em;'>{label}</span>"
-    )
-    meta = f"<span style='color:#6b7280;font-size:0.8rem;'>t = {entry.timestep} · {entry.timestamp_sec:.1f}s</span>"
-
-    container_style = (
-        f"border-left:4px solid {color};"
-        "padding:0.75rem 1rem;background:rgba(0,0,0,0.02);"
-        "border-radius:0 4px 4px 0;margin-top:0.25rem;"
-    )
-
-    st.markdown(
-        f"<div style='{container_style}'>"
-        f"<div style='display:flex;justify-content:space-between;"
-        f"align-items:center;margin-bottom:0.4rem;'>"
-        f"<strong>{header}</strong>{badge}"
-        f"</div>"
-        f"<div style='color:#374151;line-height:1.5;'>{entry.text}</div>"
-        f"<div style='margin-top:0.5rem;'>{meta}</div>"
-        f"</div>",
-        unsafe_allow_html=True,
-    )
+    rt_ms = (entry.response_time_s * 1000) if entry.response_time_s is not None else None
+    if streaming:
+        html = narration_card_streaming(
+            model_name=header,
+            subtitle=f"t = {entry.timestamp_sec:.1f}s · {entry.tone}",
+            tone=entry.tone,
+            text=entry.text,
+            step=entry.timestep,
+            response_time_ms=rt_ms,
+            variant=variant,
+        )
+    else:
+        html = narration_card(
+            model_name=header,
+            subtitle=f"t = {entry.timestamp_sec:.1f}s · {entry.tone}",
+            tone=entry.tone,
+            text=entry.text,
+            step=entry.timestep,
+            response_time_ms=rt_ms,
+        )
+    st.markdown(html, unsafe_allow_html=True)
 
 
 def _select_scenario(model_key: str) -> Optional[int]:
-    """Sidebar scenario selector, filtered to scenarios with precomputed data."""
+    """In-page scenario selector, filtered to scenarios with precomputed data."""
     available = [
         (idx, label) for idx, label in SCENARIO_CATALOG
         if has_precomputed_data(idx, model_key)
     ]
     if not available:
-        st.sidebar.error(
-            f"No precomputed narration data found for **{model_key}**.\n\n"
-            f"Run `python scripts/precompute_llm_narration.py` first."
+        st.warning(
+            f"No precomputed narration data found for {model_key}. "
+            f"Run scripts/precompute_llm_narration.py first."
         )
         return None
 
     labels = [label for _, label in available]
-    chosen_label = st.sidebar.selectbox(
+    chosen_label = st.selectbox(
         "Scenario", labels, key="llm_narr__scenario_label",
     )
     return next(idx for idx, label in available if label == chosen_label)
@@ -444,37 +475,64 @@ def _select_scenario(model_key: str) -> Optional[int]:
 # =============================================================================
 
 def render() -> None:
-    st.title("LLM Narration — Attention-Grounded XRL")
-    st.caption(
-        "Pure viewer. All narrations are precomputed offline; the UI selects which "
-        "file to load. Slider position drives the displayed narration via forward-fill."
-    )
+    from platform.shared.html_components import context_strip, empty_state
 
-    # ── Sidebar ───────────────────────────────────────────────────────────────
-    with st.sidebar:
-        st.header("Controls")
+    # ── Layout: 260px control rail + flexible content area ───────────────────
+    rail, content = st.columns([1, 4], gap="medium")
 
+    with rail:
+        st.markdown(
+            "<div class='xai-rail' style='background:#25283a;border:1px solid #3b3f55;"
+            "border-radius:12px;padding:14px;margin-top:8px;"
+            "box-shadow:0 1px 0 rgba(255,255,255,0.02) inset,0 8px 24px rgba(0,0,0,0.25);'>"
+            "<div style='font-size:11px;font-weight:700;text-transform:uppercase;"
+            "letter-spacing:0.12em;color:#a7a8b3;margin-bottom:8px;'>Driving Model (Encoder)</div>",
+            unsafe_allow_html=True,
+        )
+        st.markdown("<div style='height:12px;'></div>", unsafe_allow_html=True)
         driving_label = st.radio(
             "Driving model",
             options=list(DRIVING_MODELS.keys()),
             key="llm_narr__driving_label",
+            label_visibility="collapsed",
         )
         model_key = DRIVING_MODELS[driving_label]
+        st.markdown("</div>", unsafe_allow_html=True)
+
         if model_key not in PLATFORM_MODELS:
-            st.error(f"Driving model '{model_key}' missing from PLATFORM_MODELS.")
+            with content:
+                st.markdown(context_strip("LLM Narration"), unsafe_allow_html=True)
+                st.markdown(empty_state(f"Driving model '{model_key}' missing from catalog."),
+                            unsafe_allow_html=True)
             return
 
-    scenario_idx = _select_scenario(model_key)
-    if scenario_idx is None:
-        return
-
-    with st.sidebar:
-        compare_mode = st.checkbox(
-            "Compare two LLMs side-by-side",
-            value=False,
-            key="llm_narr__compare",
+        st.markdown(
+            "<div style='font-size:11px;font-weight:700;text-transform:uppercase;"
+            "letter-spacing:0.12em;color:#a7a8b3;margin:14px 0 8px;'>Scenario</div>",
+            unsafe_allow_html=True,
         )
+        scenario_idx = _select_scenario(model_key)
+        if scenario_idx is None:
+            with content:
+                st.markdown(context_strip("LLM Narration"), unsafe_allow_html=True)
+                st.markdown(
+                    empty_state(
+                        f"No precomputed narration data for {model_key}.",
+                        icon="✎",
+                        command="python scripts/precompute_llm_narration.py",
+                    ),
+                    unsafe_allow_html=True,
+                )
+            return
 
+        st.markdown(
+            "<div style='font-size:11px;font-weight:700;text-transform:uppercase;"
+            "letter-spacing:0.12em;color:#a7a8b3;margin:14px 0 8px;'>Mode</div>",
+            unsafe_allow_html=True,
+        )
+        compare_mode = st.checkbox(
+            "Compare two LLMs", value=False, key="llm_narr__compare",
+        )
         toggle_grounding = st.toggle(
             "Attention grounding", value=True, key="llm_narr__tg",
         )
@@ -482,86 +540,157 @@ def render() -> None:
             "Counterfactual alternatives", value=True, key="llm_narr__tc",
         )
         toggle_key = toggle_key_from_flags(toggle_grounding, toggle_counterfactual)
-
-        combos_available = set(
-            available_narration_combos(scenario_idx, model_key)
+        stream_effect = st.toggle(
+            "Streaming effect", value=True, key="llm_narr__stream",
+            help="Reveal narrations token-by-token, like live LLM streaming.",
         )
-        llm_options = [
-            k for k in LLM_MODELS.keys() if (k, toggle_key) in combos_available
-        ]
+
+        combos_available = set(available_narration_combos(scenario_idx, model_key))
+        llm_options = [k for k in LLM_MODELS if (k, toggle_key) in combos_available]
         if not llm_options:
-            st.warning(
-                f"No precomputed narrations for toggle combo **{toggle_key}**. "
-                f"Try a different toggle or run the precompute script."
-            )
+            with content:
+                st.markdown(context_strip("LLM Narration"), unsafe_allow_html=True)
+                st.markdown(
+                    empty_state(
+                        f"No precomputed narrations for toggle combo '{toggle_key}'.",
+                        icon="✎",
+                        hint="Try a different toggle or run the precompute script.",
+                    ),
+                    unsafe_allow_html=True,
+                )
             return
 
+        st.markdown(
+            "<div style='font-size:11px;font-weight:700;text-transform:uppercase;"
+            "letter-spacing:0.12em;color:#a7a8b3;margin:14px 0 8px;'>LLM</div>",
+            unsafe_allow_html=True,
+        )
         llm_key_a = st.selectbox(
-            "LLM model",
+            "LLM model A",
             options=llm_options,
             format_func=lambda k: LLM_MODELS[k]["display"],
             key="llm_narr__llm_a",
+            label_visibility="collapsed",
         )
         llm_key_b = None
         if compare_mode:
             others = [k for k in llm_options if k != llm_key_a] or llm_options
             llm_key_b = st.selectbox(
-                "LLM model (B)",
+                "LLM model B",
                 options=others,
                 format_func=lambda k: LLM_MODELS[k]["display"],
                 key="llm_narr__llm_b",
             )
 
-    # ── Load scenario artifact (for num_steps + BEV) ──────────────────────────
-    artifact = load_artifact(model_key, scenario_idx)
-    if artifact is None:
-        st.error(
-            f"Missing scenario artifact for {model_key} / scenario {scenario_idx}. "
-            f"Run the post-hoc precompute script first."
+    # ── Content column ────────────────────────────────────────────────────────
+    with content:
+        st.markdown(
+            context_strip("LLM Narration",
+                          model_label=LLM_MODELS[llm_key_a]["display"],
+                          scenario_label=f"Scenario {scenario_idx}"),
+            unsafe_allow_html=True,
         )
-        return
-    num_steps = artifact.num_steps
 
-    # ── BEV player drives the timestep ────────────────────────────────────────
-    step = render_bev_player(artifact, key_prefix="llm_narr")
+        artifact = load_artifact(model_key, scenario_idx)
+        if artifact is None:
+            st.markdown(
+                empty_state(
+                    f"Missing scenario artifact for {model_key} / scenario {scenario_idx}.",
+                    command="python scripts/precompute_posthoc_demo.py",
+                ),
+                unsafe_allow_html=True,
+            )
+            return
+        num_steps = artifact.num_steps
 
-    # ── Load narration & report lists (cached in session) ─────────────────────
-    narr_a = _ensure_narrations(scenario_idx, model_key, llm_key_a, toggle_key, num_steps)
-    reports = _ensure_reports(scenario_idx, model_key, num_steps)
+        # Top strip: BEV (60%) + quick stats (40%)
+        col_bev, col_stats = st.columns([3, 2], gap="medium")
+        with col_bev:
+            step = render_bev_player(artifact, key_prefix="llm_narr", height=450)
 
-    # ── Narration display (single or side-by-side) ────────────────────────────
-    if compare_mode and llm_key_b is not None:
-        narr_b = _ensure_narrations(scenario_idx, model_key, llm_key_b, toggle_key, num_steps)
-        col_a, col_b = st.columns(2)
-        with col_a:
-            st.caption(LLM_MODELS[llm_key_a]["display"])
-            _render_narration_box(narr_a[step], header="A")
-        with col_b:
-            st.caption(LLM_MODELS[llm_key_b]["display"])
-            _render_narration_box(narr_b[step], header="B")
-    else:
-        _render_narration_box(narr_a[step], header=LLM_MODELS[llm_key_a]["display"])
+        narr_a = _ensure_narrations(scenario_idx, model_key, llm_key_a, toggle_key, num_steps)
+        reports = _ensure_reports(scenario_idx, model_key, num_steps)
 
-    # ── Expandable structured-report viewer ───────────────────────────────────
-    report = reports[step]
-    is_at_event = (
-        report is not None and int(report.get("step", -1)) == step
-    )
-    label = "📄 Structured JSON report"
-    if report is None:
-        label += " (none yet)"
-    elif not is_at_event:
-        label += f" (last event @ step {report.get('step')})"
-    with st.expander(label, expanded=False):
-        if report is None:
-            st.info("No report has been emitted yet at this timestep.")
+        with col_stats:
+            non_null_narr = len({n.timestep for n in narr_a if n is not None})
+            non_null_rep  = len({r.get("step") for r in reports if r is not None})
+            seen_rt: dict[int, float] = {
+                n.timestep: n.response_time_s
+                for n in narr_a
+                if n is not None and n.response_time_s is not None
+            }
+            avg_rt_ms = (sum(seen_rt.values()) / len(seen_rt) * 1000) if seen_rt else None
+            st.markdown(
+                "<div style='font-size:11px;font-weight:700;text-transform:uppercase;"
+                "letter-spacing:0.12em;color:#a7a8b3;margin:6px 0 8px;'>Quick stats</div>",
+                unsafe_allow_html=True,
+            )
+            s1, s2 = st.columns(2)
+            s1.metric("Narrations", str(non_null_narr))
+            s2.metric("Reports",    str(non_null_rep))
+            s3, s4 = st.columns(2)
+            s3.metric("Avg latency", f"{avg_rt_ms:.0f} ms" if avg_rt_ms else "—")
+            s4.metric("Current t",   str(step))
+
+        # Narration cards (2-col on compare, 1-col otherwise)
+        st.markdown(
+            "<h3 style='font-size:16px;font-weight:700;color:#f4f4f7;"
+            "font-family:Inter,sans-serif;margin:14px 0 10px;'>Narration</h3>",
+            unsafe_allow_html=True,
+        )
+        # Stream the token reveal only while the episode is playing, so it does
+        # not fire on initial page load / manual scrubbing.
+        streaming = bool(stream_effect) and is_bev_playing(artifact, "llm_narr")
+
+        entry_a = narr_a[step]
+        slot_a = f"llm_narr__var__{model_key}__{scenario_idx}__{llm_key_a}"
+        variant_a = _streaming_variant(slot_a, entry_a.timestep if entry_a else None)
+
+        if compare_mode and llm_key_b is not None:
+            narr_b = _ensure_narrations(scenario_idx, model_key, llm_key_b, toggle_key, num_steps)
+            entry_b = narr_b[step]
+            slot_b = f"llm_narr__var__{model_key}__{scenario_idx}__{llm_key_b}"
+            variant_b = _streaming_variant(slot_b, entry_b.timestep if entry_b else None)
+            col_a, col_b = st.columns(2, gap="medium")
+            with col_a:
+                _render_narration_box(
+                    entry_a, header=LLM_MODELS[llm_key_a]["display"],
+                    streaming=streaming, variant=variant_a,
+                )
+            with col_b:
+                _render_narration_box(
+                    entry_b, header=LLM_MODELS[llm_key_b]["display"],
+                    streaming=streaming, variant=variant_b,
+                )
         else:
-            cols = st.columns(4)
-            cols[0].metric("Necessity",      f"{report.get('necessity_score', 0):.2f}")
-            grounding = report.get("attention_grounding", {}) or {}
-            gscore = grounding.get("grounding_score")
-            cols[1].metric("Grounding",      f"{gscore:.2f}" if gscore is not None else "—")
-            cols[2].metric("Decision class", str(report.get("decision_class", "—")))
-            n_alts = len(report.get("alternatives") or [])
-            cols[3].metric("Alternatives",   str(n_alts))
-            st.json(report)
+            _render_narration_box(
+                entry_a, header=LLM_MODELS[llm_key_a]["display"],
+                streaming=streaming, variant=variant_a,
+            )
+
+        # Structured report (expander)
+        report = reports[step]
+        is_at_event = (report is not None and int(report.get("step", -1)) == step)
+        label = "Structured JSON report"
+        if report is None:
+            label += " (none yet)"
+        elif not is_at_event:
+            label += f" (last event @ step {report.get('step')})"
+        with st.expander(label, expanded=False):
+            if report is None:
+                st.markdown(empty_state("No report emitted yet at this timestep."),
+                            unsafe_allow_html=True)
+            else:
+                cols = st.columns(4)
+                cols[0].metric("Necessity",      f"{report.get('necessity_score', 0):.2f}")
+                grounding = report.get("attention_grounding", {}) or {}
+                gscore = grounding.get("grounding_score")
+                cols[1].metric("Grounding",      f"{gscore:.2f}" if gscore is not None else "—")
+                cols[2].metric("Decision class", str(report.get("decision_class", "—")))
+                n_alts = len(report.get("alternatives") or [])
+                cols[3].metric("Alternatives",   str(n_alts))
+                st.json(report)
+
+    # Trigger rerun for BEV playback AFTER all content is rendered so the
+    # narration cards and stats update every frame, not just when paused.
+    schedule_bev_rerun()

@@ -56,8 +56,10 @@ class PerceiverWrapper(ExplainableModel):
         needs_batch = observation.ndim == 1
         obs = observation[None, :] if needs_batch else observation
 
-        # Run with capture_intermediates for attention extraction
-        logits, state = self._policy_module.apply(
+        # Run with capture_intermediates for attention extraction.
+        # PolicyNetwork.__call__ returns (logits, attn_weights) — unpack both
+        # the tuple output and the mutated-state dict from `apply`.
+        (logits, _attn_weights), state = self._policy_module.apply(
             self._policy_params,
             obs,
             capture_intermediates=True,
@@ -104,7 +106,8 @@ class PerceiverWrapper(ExplainableModel):
         """
         # Add batch dim
         obs = observation[None, :]
-        logits = self._policy_module.apply(self._policy_params, obs)
+        # PolicyNetwork.__call__ returns (logits, attn_weights) — unpack.
+        logits, _attn_weights = self._policy_module.apply(self._policy_params, obs)
         action_mean = logits[0, : self._action_size]
 
         if action_idx is not None:
