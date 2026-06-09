@@ -177,10 +177,23 @@ def extract_traffic_light_state(state) -> Dict[str, Any]:
         idx = int(np.array(jax.device_get(state.timestep))[0])
         traf = state.log_traffic_light
 
-        # TL state and position at current timestep
-        tl_states_raw = np.array(jax.device_get(traf.state[:, idx]))     # (N_tl,)
-        tl_valid = np.array(jax.device_get(traf.valid[:, idx])).astype(bool)
-        tl_xy = np.array(jax.device_get(traf.xy[:, idx]))                # (N_tl, 2)
+        # TL arrays may carry a leading batch dimension:
+        #   shape = (batch, N_tl, T)      for state/valid
+        #   shape = (batch, N_tl, T, 2)   for xy
+        # Strip the batch dim when present before indexing by timestep.
+        tl_state_full = np.array(jax.device_get(traf.state))
+        tl_valid_full = np.array(jax.device_get(traf.valid))
+        tl_xy_full    = np.array(jax.device_get(traf.xy))
+
+        if tl_state_full.ndim == 3:            # (batch, N_tl, T)
+            tl_state_full = tl_state_full[0]   # → (N_tl, T)
+            tl_valid_full = tl_valid_full[0]
+            tl_xy_full    = tl_xy_full[0]      # → (N_tl, T, 2)
+
+        # Now shape is (N_tl, T[, 2]) — index by timestep
+        tl_states_raw = tl_state_full[:, idx]                # (N_tl,)
+        tl_valid = tl_valid_full[:, idx].astype(bool)
+        tl_xy = tl_xy_full[:, idx]                           # (N_tl, 2)
 
         # Ego position
         traj = state.sim_trajectory
