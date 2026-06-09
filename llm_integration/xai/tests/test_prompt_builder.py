@@ -8,7 +8,7 @@ from xai.narration.prompt_builder import build_prompt
 MOCK_GROUNDED_CRITICAL_REPORT = {
     "step": 40,
     "timestamp_s": 4.0,
-    "ego_state": {"ego_velocity": 12.5, "ego_action": "moving"},
+    "ego_state": {"ego_velocity": 12.5, "ego_motion_state": "cruising"},
     "chosen_action": {"label": "Maintain", "accel": 0.0, "steer": 0.0, "outcome": "SAFE"},
     "context_categories": ["following"],
     "alternatives": [

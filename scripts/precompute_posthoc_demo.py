@@ -329,12 +329,14 @@ def main(args: argparse.Namespace) -> None:
     scenarios: list[int] = args.scenarios
     overwrite: bool = args.overwrite
     skip_attention: bool = args.no_attention
+    data_path: str = args.data
 
     print(f"Demo models   : {DEMO_MODEL_KEYS}")
     print(f"Scenarios     : {scenarios}")
     print(f"Methods       : {DEMO_METHODS}")
     print(f"Overwrite     : {overwrite}")
     print(f"Attention     : {not skip_attention}")
+    print(f"Data path     : {data_path}")
     print()
 
     for model_key in DEMO_MODEL_KEYS:
@@ -375,7 +377,7 @@ def main(args: argparse.Namespace) -> None:
                     artifact = pickle.load(fh)
             else:
                 scenario_data, raw_obs = _run_episode_and_capture_obs(
-                    env, policy_fn, DATA_PATH, scenario_idx
+                    env, policy_fn, data_path, scenario_idx
                 )
                 scenario_data.model_key = model_key
 
@@ -447,6 +449,12 @@ if __name__ == "__main__":
         "--no-attention",
         action="store_true",
         help="Skip attention series computation.",
+    )
+    parser.add_argument(
+        "--data",
+        type=str,
+        default=DATA_PATH,
+        help=f"Path to WOMD TFRecord data (default: {DATA_PATH})",
     )
     args = parser.parse_args()
     main(args)

@@ -20,6 +20,17 @@ from flax import linen as nn
 from vmax.agents import datatypes
 
 
+def _encoder_latent(out):
+    """Normalize an encoder's output to just the latent tensor.
+
+    vmax LQ/Perceiver encoders return a tuple ``(latent, attention_weights)``
+    (see vmax.agents.networks.encoders.lq), while simpler encoders return a
+    bare array. The concept bottleneck only consumes the latent, so unwrap the
+    tuple when present.
+    """
+    return out[0] if isinstance(out, tuple) else out
+
+
 class ConceptHead(nn.Module):
     """MLP that maps encoder latent to concept predictions.
 
@@ -59,7 +70,7 @@ class CBMPolicyNetwork(nn.Module):
     @nn.compact
     def __call__(self, obs: jax.Array) -> jax.Array:
         # Encode
-        z = self.encoder_layer(obs) if self.encoder_layer is not None else obs
+        z = _encoder_latent(self.encoder_layer(obs)) if self.encoder_layer is not None else obs
 
         # In frozen mode, stop gradients after encoder
         if self.frozen_encoder:
@@ -82,7 +93,7 @@ class CBMPolicyNetwork(nn.Module):
         The latent is returned WITHOUT stop_gradient regardless of
         frozen_encoder, so callers can decide gradient behavior.
         """
-        z = self.encoder_layer(obs) if self.encoder_layer is not None else obs
+        z = _encoder_latent(self.encoder_layer(obs)) if self.encoder_layer is not None else obs
         concepts = self.concept_head(z)
         return z, concepts
 
@@ -121,7 +132,7 @@ class CBMValueNetwork(nn.Module):
         shared = self.shared_encoder and self.encoder_layer is not None
 
         if shared:
-            z = self.encoder_layer(obs)
+            z = _encoder_latent(self.encoder_layer(obs))
             if self.frozen_encoder:
                 z = jax.lax.stop_gradient(z)
             concepts = self.concept_head(z)
@@ -130,7 +141,7 @@ class CBMValueNetwork(nn.Module):
         for i in range(self.num_networks):
             if not shared:
                 if self.encoder_layer is not None:
-                    z = self.encoder_layer(obs)
+                    z = _encoder_latent(self.encoder_layer(obs))
                 else:
                     z = obs
                 if self.frozen_encoder:

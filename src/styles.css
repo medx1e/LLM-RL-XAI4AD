@@ -1,0 +1,216 @@
+@import "tailwindcss" source(none);
+@source "../src";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --font-sans: "Inter", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+  --font-serif: "Source Serif 4", Georgia, serif;
+
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-ring-offset-background: var(--background);
+
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-error: var(--destructive);
+
+  /* Semantic XAI domain colors */
+  --color-sdc: var(--sdc);
+  --color-agents-c: var(--agents-c);
+  --color-roadgraph: var(--roadgraph);
+  --color-traffic-lights: var(--traffic-lights);
+  --color-gps: var(--gps);
+
+  /* Agent identity slots */
+  --color-a0: var(--a0);
+  --color-a1: var(--a1);
+  --color-a2: var(--a2);
+  --color-a3: var(--a3);
+  --color-a4: var(--a4);
+  --color-a5: var(--a5);
+  --color-a6: var(--a6);
+  --color-a7: var(--a7);
+
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+}
+
+/* Dark is the DEFAULT for this research tool. :root === dark. */
+:root,
+.dark {
+  --radius: 0.75rem;
+
+  --background: oklch(0.16 0.018 270);
+  --foreground: oklch(0.97 0.005 270);
+  --card: oklch(0.21 0.022 270);
+  --card-foreground: oklch(0.97 0.005 270);
+  --popover: oklch(0.21 0.022 270);
+  --popover-foreground: oklch(0.97 0.005 270);
+
+  /* Indigo accent — distinct from semantic palette */
+  --primary: oklch(0.66 0.18 277);
+  --primary-foreground: oklch(0.98 0.005 270);
+  --accent: oklch(0.66 0.18 277);
+  --accent-foreground: oklch(0.98 0.005 270);
+
+  --secondary: oklch(0.28 0.025 270);
+  --secondary-foreground: oklch(0.97 0.005 270);
+  --muted: oklch(0.26 0.022 270);
+  --muted-foreground: oklch(0.7 0.02 270);
+
+  --destructive: oklch(0.65 0.22 25);
+  --destructive-foreground: oklch(0.98 0 0);
+  --success: oklch(0.7 0.16 160);
+  --warning: oklch(0.78 0.16 75);
+
+  --border: oklch(0.31 0.025 268);
+  --input: oklch(0.28 0.025 268);
+  --ring: oklch(0.66 0.18 277);
+
+  /* XAI semantic domain palette (preserve hex intent) */
+  --sdc: oklch(0.6 0.11 260);            /* #4C72B0 */
+  --agents-c: oklch(0.7 0.14 50);        /* #DD8452 */
+  --roadgraph: oklch(0.66 0.12 145);     /* #55A868 */
+  --traffic-lights: oklch(0.6 0.18 22);  /* #C44E52 */
+  --gps: oklch(0.6 0.11 305);            /* #8172B2 */
+
+  /* 8 agent identity colors */
+  --a0: oklch(0.62 0.21 25);    /* #E41A1C */
+  --a1: oklch(0.55 0.14 250);   /* #377EB8 */
+  --a2: oklch(0.65 0.16 140);   /* #4DAF4A */
+  --a3: oklch(0.5 0.16 315);    /* #984EA3 */
+  --a4: oklch(0.72 0.17 55);    /* #FF7F00 */
+  --a5: oklch(0.88 0.17 95);    /* #FFD92F */
+  --a6: oklch(0.5 0.1 50);      /* #A65628 */
+  --a7: oklch(0.75 0.13 350);   /* #F781BF */
+
+  --chart-1: var(--primary);
+  --chart-2: var(--sdc);
+  --chart-3: var(--agents-c);
+  --chart-4: var(--roadgraph);
+  --chart-5: var(--gps);
+
+  --sidebar: oklch(0.18 0.02 270);
+  --sidebar-foreground: oklch(0.92 0.005 270);
+  --sidebar-primary: oklch(0.66 0.18 277);
+  --sidebar-primary-foreground: oklch(0.98 0 0);
+  --sidebar-accent: oklch(0.25 0.025 270);
+  --sidebar-accent-foreground: oklch(0.97 0 0);
+  --sidebar-border: oklch(0.27 0.022 270);
+  --sidebar-ring: oklch(0.66 0.18 277);
+}
+
+@layer base {
+  * {
+    border-color: var(--color-border);
+  }
+
+  html,
+  body {
+    font-family: var(--font-sans);
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    font-feature-settings: "cv02", "cv03", "cv04", "ss01";
+  }
+
+  code,
+  kbd,
+  .mono {
+    font-family: var(--font-mono);
+  }
+
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: var(--color-border);
+    border-radius: 5px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--color-muted-foreground);
+  }
+}
+
+@layer components {
+  .panel {
+    background: var(--color-card);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    box-shadow: 0 1px 0 oklch(1 0 0 / 0.02) inset, 0 8px 24px oklch(0 0 0 / 0.25);
+  }
+
+  .glass {
+    background: oklch(1 0 0 / 0.03);
+    backdrop-filter: blur(10px);
+    border: 1px solid oklch(1 0 0 / 0.06);
+  }
+
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    padding: 0.125rem 0.5rem;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    border-radius: 999px;
+    border: 1px solid var(--color-border);
+    background: var(--color-secondary);
+    color: var(--color-foreground);
+  }
+
+  .grid-bg {
+    background-image:
+      linear-gradient(to right, oklch(1 0 0 / 0.04) 1px, transparent 1px),
+      linear-gradient(to bottom, oklch(1 0 0 / 0.04) 1px, transparent 1px);
+    background-size: 32px 32px;
+  }
+
+  .scanline::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: repeating-linear-gradient(
+      to bottom,
+      transparent 0,
+      transparent 3px,
+      oklch(1 0 0 / 0.015) 3px,
+      oklch(1 0 0 / 0.015) 4px
+    );
+  }
+}

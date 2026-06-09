@@ -80,10 +80,23 @@ class SemanticGraphBuilder:
 
     @staticmethod
     def determine_action_state(vx: float, vy: float) -> str:
+        """Classify the ego's observed motion into a descriptive kinematic state.
+
+        This describes the **current motion** of the vehicle (an observation),
+        NOT the action the policy has chosen.  Finer-grained buckets help
+        downstream LLM narration avoid contradictions such as a ``stopped``
+        vehicle that is about to accelerate.
+        """
         speed = math.sqrt(vx**2 + vy**2)
         if speed < 0.1:
             return "stopped"
-        return "moving"
+        if speed < 1.0:
+            return "creeping"
+        if speed < 5.0:
+            return "slow"
+        if speed < 15.0:
+            return "cruising"
+        return "fast"
 
     # --------------------------------------------------------------------- #
     # Core graph builder
@@ -113,7 +126,7 @@ class SemanticGraphBuilder:
 
         scenario_info = {
             "ego_velocity": round(ego_speed, 2),
-            "ego_action": self.determine_action_state(evx, evy),
+            "ego_motion_state": self.determine_action_state(evx, evy),
         }
 
         context_nodes: List[Dict[str, Any]] = []
