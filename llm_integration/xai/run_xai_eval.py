@@ -146,6 +146,85 @@ def plot_graph_on_scene(
 # STATE CONVERSION UTILITY
 # =============================================================================
 
+# Waymax TrafficSignalLaneState enum → human-readable label.
+# See vmax/simulator/features/extractor/utils.py for the full enum.
+_TL_STATE_LABELS: Dict[int, str] = {
+    0: "unknown",
+    1: "red",          # ARROW_STOP
+    2: "yellow",       # ARROW_CAUTION
+    3: "green",        # ARROW_GO
+    4: "red",          # STOP
+    5: "yellow",       # CAUTION
+    6: "green",        # GO
+    7: "red",          # FLASHING_STOP
+    8: "yellow",       # FLASHING_CAUTION
+}
+
+
+def extract_traffic_light_state(state) -> Dict[str, Any]:
+    """Extract the ego-relevant traffic light state from the simulator.
+
+    Reads ``state.log_traffic_light`` at the current timestep, finds the
+    closest valid traffic light, and returns its state as a human-readable
+    label together with its distance to the ego.
+
+    Returns:
+        A dict with keys ``state`` (str: red/yellow/green/none),
+        ``distance_m`` (float or None), and ``raw_states`` (list of str)
+        summarising all valid TL states in the scene.
+    """
+    try:
+        idx = int(np.array(jax.device_get(state.timestep))[0])
+        traf = state.log_traffic_light
+
+        # TL state and position at current timestep
+        tl_states_raw = np.array(jax.device_get(traf.state[:, idx]))     # (N_tl,)
+        tl_valid = np.array(jax.device_get(traf.valid[:, idx])).astype(bool)
+        tl_xy = np.array(jax.device_get(traf.xy[:, idx]))                # (N_tl, 2)
+
+        # Ego position
+        traj = state.sim_trajectory
+        is_sdc = np.array(jax.device_get(state.object_metadata.is_sdc))
+        if is_sdc.ndim == 2:
+            is_sdc = is_sdc[0]
+        ego_idx = int(np.argmax(is_sdc))
+
+        ego_x_raw = jax.device_get(traj.x)
+        ego_y_raw = jax.device_get(traj.y)
+        if ego_x_raw.ndim == 3:
+            ego_x = float(ego_x_raw[0, ego_idx, idx])
+            ego_y = float(ego_y_raw[0, ego_idx, idx])
+        else:
+            ego_x = float(ego_x_raw[ego_idx, idx])
+            ego_y = float(ego_y_raw[ego_idx, idx])
+
+        if not np.any(tl_valid):
+            return {"state": "none", "distance_m": None, "raw_states": []}
+
+        # Compute distances to ego for valid TLs
+        dists = np.sqrt((tl_xy[:, 0] - ego_x)**2 + (tl_xy[:, 1] - ego_y)**2)
+        dists[~tl_valid] = np.inf
+
+        nearest_idx = int(np.argmin(dists))
+        nearest_state = int(tl_states_raw[nearest_idx])
+        nearest_dist = float(dists[nearest_idx])
+        label = _TL_STATE_LABELS.get(nearest_state, "unknown")
+
+        # Collect all valid TL states for context
+        raw_labels = [
+            _TL_STATE_LABELS.get(int(tl_states_raw[i]), "unknown")
+            for i in range(len(tl_states_raw))
+            if tl_valid[i]
+        ]
+
+        return {
+            "state": label,
+            "distance_m": round(nearest_dist, 1),
+            "raw_states": raw_labels,
+        }
+    except Exception:
+        return {"state": "unknown", "distance_m": None, "raw_states": []}
+
 
 def state_to_dict(state) -> Dict[str, Any]:
     """Convert JAX SimulatorState to a Python dictionary of numpy arrays."""
@@ -478,6 +557,9 @@ def run_xai_eval(args):
                     "ego_motion_state": graph_builder.determine_action_state(ego_vx, ego_vy),
                 }
 
+                # Extract traffic light state for the current timestep
+                tl_state = extract_traffic_light_state(current_transition.state)
+
                 report = report_builder.build(
                     step=step_count,
                     timestamp_s=step_count * 0.1,
@@ -493,6 +575,7 @@ def run_xai_eval(args):
                     necessity_score=necessity_result["necessity_score"],
                     attention_grounding=grounding_result,
                     decision_class=dec_class,
+                    traffic_light=tl_state,
                 )
 
                 # G. LLM NARRATION (Modules 9 → 10 → 11)  [online mode]

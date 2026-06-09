@@ -25,7 +25,7 @@ from platform.shared.model_catalog import PLATFORM_MODELS
 from platform.shared.scenario_store import get_available_scenarios, load_artifact
 from platform.shared.html_components import context_strip, empty_state, chip
 from platform.shared.charts import (
-    concept_timeline_chart, episode_reward_chart, concept_snapshot_chart,
+    concept_timeline_chart, concept_snapshot_chart,
 )
 from platform.shared.theme import CONCEPT_CATEGORIES, CONCEPT_CATEGORY_COLORS
 
@@ -222,24 +222,6 @@ def _render_cbm_player(
             )
         current_step = render_bev_player(artifact, key_prefix="cbm")
 
-        rewards = np.array(artifact.scenario_data.rewards)
-        dones   = np.array(artifact.scenario_data.dones).astype(bool)
-        s1, s2, s3 = st.columns(3)
-        s1.metric("Total",     f"{rewards.sum():.2f}")
-        s2.metric("@ step",    f"{rewards[current_step]:.3f}")
-        s3.metric("Outcome",   "✕ Done" if dones.any() else "✓ Complete")
-
-        st.markdown(
-            "<div style='font-size:14px;font-weight:600;color:#f4f4f7;"
-            "font-family:Inter,sans-serif;margin:12px 0 4px;'>Episode Reward</div>",
-            unsafe_allow_html=True,
-        )
-        st.plotly_chart(
-            episode_reward_chart(artifact, current_step=current_step, accent=accent),
-            width="stretch",
-            config={"displayModeBar": False},
-            key=f"cbm_reward_chart_{local_idx}",
-        )
 
     with col_xai:
         st.markdown(

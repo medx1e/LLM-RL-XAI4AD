@@ -25,7 +25,7 @@ from platform.shared.html_components import (
 )
 from platform.shared.charts import (
     category_importance_chart, entity_importance_chart,
-    attribution_timeline_chart, episode_info_chart,
+    attribution_timeline_chart,
     attention_entity_chart, category_focus_chart,
     temporal_stability_chart,
 )
@@ -183,16 +183,6 @@ def render() -> None:
             if artifact.interesting_timesteps:
                 st.caption("Flagged: " + ", ".join(str(t) for t in artifact.interesting_timesteps))
 
-            rewards = np.array(artifact.scenario_data.rewards)
-            dones   = np.array(artifact.scenario_data.dones).astype(bool)
-            c1, c2, c3 = st.columns(3)
-            c1.metric("Cumulative", f"{rewards.sum():.2f}")
-            c2.metric("@ step",     f"{rewards[step]:.3f}")
-            c3.metric("Outcome",    "✕ Done" if dones.any() else "✓ Complete")
-
-            with st.expander("Reward curves", expanded=False):
-                fig_ep = episode_info_chart(artifact, current_step=step)
-                st.plotly_chart(fig_ep, width="stretch", config={"displayModeBar": False})
 
         with col_xai:
             st.markdown(
@@ -534,6 +524,22 @@ def _render_attention_section(artifact, model_key: str, scenario_idx: int, step:
     if show_overlay:
         col_map, col_bars = st.columns([1, 1], gap="small")
         with col_map:
+            # Synced transport controls — reads/writes the SAME session-state
+            # keys as the main PostHoc BEV player so both stay in lock-step.
+            playing_key = f"posthoc__playing__{artifact.model_key}__{artifact.scenario_idx}"
+            attn_btn_key = f"posthoc__attn_playbtn__{artifact.model_key}__{artifact.scenario_idx}"
+            is_playing = st.session_state.get(playing_key, False)
+            ctrl_prog, ctrl_bt = st.columns([5, 1])
+            with ctrl_prog:
+                st.progress(
+                    (step + 1) / artifact.num_steps,
+                    text=f"Step {step + 1} / {artifact.num_steps}",
+                )
+            with ctrl_bt:
+                btn_label = "⏸" if is_playing else "▶"
+                if st.button(btn_label, key=attn_btn_key, width='stretch'):
+                    st.session_state[playing_key] = not is_playing
+                    st.rerun()
             overlay_fn = make_attention_overlay_fn(artifact, attn_series, selected_agents)
             render_bev_frame(
                 artifact, step,

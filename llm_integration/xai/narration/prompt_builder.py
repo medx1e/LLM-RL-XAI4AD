@@ -55,8 +55,10 @@ _SYSTEM_PROMPT = (
     "PROHIBITED:\n"
     "- Do not claim to know what the model 'might', 'could', or 'probably' "
     "was thinking.\n"
-    "- Do not reference road features, lane markings, traffic signals, or "
-    "weather unless they appear in the report.\n"
+    "- Do not reference road features, lane markings, or weather "
+    "unless they appear in the report.\n"
+    "- Traffic light state IS available in the report when present — "
+    "reference it when relevant to explain the agent's decision.\n"
     "- Do not use generic safety language — be specific to this scenario."
 )
 
@@ -87,6 +89,19 @@ def _describe_nearby_agents(report: Dict[str, Any]) -> str:
         lines.append(sentence)
 
     return "\n".join(lines)
+
+
+def _describe_traffic_light(report: Dict[str, Any]) -> str:
+    """Format the traffic light state into a readable block for the LLM."""
+    tl = report.get("traffic_light")
+    if not tl or tl.get("state") in (None, "none", "unknown"):
+        return "  No traffic light detected nearby."
+
+    state = tl.get("state", "unknown").upper()
+    dist = tl.get("distance_m")
+    dist_str = f" ({dist}m away)" if dist is not None else ""
+
+    return f"  Nearest traffic light: {state}{dist_str}"
 
 
 def _describe_alternatives(alts: List[Dict[str, Any]]) -> str:
@@ -154,12 +169,17 @@ def _build_detailed(report: Dict[str, Any]) -> str:
             f"in {worst.get('min_ttc', '?')}s"
         )
 
+    tl_str = _describe_traffic_light(report)
+
     prompt = (
         f"=== DRIVING REPORT ===\n\n"
 
         f"[EGO STATE]\n"
         f"  Motion State: {ego.get('ego_motion_state', 'moving')}\n"
         f"  Velocity: {ego.get('ego_velocity', '?')} m/s\n\n"
+
+        f"[TRAFFIC LIGHT]\n"
+        f"{tl_str}\n\n"
 
         f"[NEARBY AGENTS]\n"
         f"{scene_str}\n\n"
@@ -214,12 +234,17 @@ def _build_brief(report: Dict[str, Any]) -> str:
     alts_str = _describe_alternatives(alts)
     attn_str = _describe_attention(report)
 
+    tl_str = _describe_traffic_light(report)
+
     prompt = (
         f"=== DRIVING REPORT ===\n\n"
 
         f"[EGO STATE]\n"
         f"  Motion State: {ego.get('ego_motion_state', 'moving')}\n"
         f"  Velocity: {ego.get('ego_velocity', '?')} m/s\n\n"
+
+        f"[TRAFFIC LIGHT]\n"
+        f"{tl_str}\n\n"
 
         f"[NEARBY AGENTS]\n"
         f"{scene_str}\n\n"

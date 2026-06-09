@@ -110,6 +110,56 @@ ACTIVE_TOGGLE_COMBOS: list[str] = [
     k for k in _LLM_CONFIG["toggle_combos"] if k in TOGGLE_COMBOS
 ] or list(TOGGLE_COMBOS.keys())
 
+# Per-LLM evaluation metrics (hardcoded from DeepEval G-Eval benchmark).
+# Keys must match the LLM registry keys in config/llm_narration.yaml.
+# Order: Overall Cognition Score first, then the three sub-dimensions.
+LLM_EVAL_METRICS: dict[str, dict[str, float]] = {
+    "glm":   {"Overall Cognition Score": 0.892, "Situational Awareness": 0.931, "Reasoning": 0.858, "Communication": 0.882},
+    "gemma": {"Overall Cognition Score": 0.827, "Situational Awareness": 0.906, "Reasoning": 0.739, "Communication": 0.844},
+    "qwen":  {"Overall Cognition Score": 0.777, "Situational Awareness": 0.803, "Reasoning": 0.746, "Communication": 0.788},
+}
+
+_EVAL_METRIC_COLORS: dict[str, str] = {
+    "Overall Cognition Score": "#10b981",
+    "Situational Awareness": "#f59e0b",
+    "Reasoning": "#818cf8",
+    "Communication": "#38bdf8",
+}
+
+
+def _render_llm_eval_card(llm_key: str) -> None:
+    """Render evaluation metric rows for a single LLM, labelled with model name."""
+    metrics = LLM_EVAL_METRICS.get(llm_key)
+    if not metrics:
+        return
+    display_name = LLM_MODELS.get(llm_key, {}).get("display", llm_key)
+    rows = ""
+    for name, value in metrics.items():
+        color = _EVAL_METRIC_COLORS.get(name, "#a7a8b3")
+        # Overall Cognition Score gets a slightly larger, highlighted style
+        if name == "Overall Cognition Score":
+            rows += (
+                f"<div style='padding:7px 10px;background:#1a1d2e;border:1px solid {color};"
+                f"border-radius:8px;display:flex;justify-content:space-between;align-items:center;'>"
+                f"<span style='font-size:12px;font-weight:600;color:#e2e2e8;'>{name}</span>"
+                f"<span style='font-size:14px;font-weight:800;color:{color};'>{value:.3f}</span></div>"
+            )
+        else:
+            rows += (
+                f"<div style='padding:5px 10px;background:#1a1d2e;border:1px solid #3b3f55;"
+                f"border-radius:8px;display:flex;justify-content:space-between;align-items:center;'>"
+                f"<span style='font-size:11px;color:#a7a8b3;'>{name}</span>"
+                f"<span style='font-size:12px;font-weight:700;color:{color};'>{value:.3f}</span></div>"
+            )
+    st.markdown(
+        f"<div style='margin-bottom:8px;'>"
+        f"<div style='font-size:10px;font-weight:700;color:#6f6ae8;"
+        f"letter-spacing:0.05em;margin-bottom:4px;'>{display_name}</div>"
+        f"<div style='display:flex;flex-direction:column;gap:4px;'>{rows}</div>"
+        f"</div>",
+        unsafe_allow_html=True,
+    )
+
 
 def toggle_key_from_flags(grounding: bool, counterfactual: bool) -> str:
     """Resolve the canonical toggle key for a (grounding, counterfactual) pair."""
@@ -481,23 +531,21 @@ def render() -> None:
     rail, content = st.columns([1, 4], gap="medium")
 
     with rail:
+        driving_label = "LQ (Perceiver)"
+        model_key = DRIVING_MODELS[driving_label]
+
         st.markdown(
             "<div class='xai-rail' style='background:#25283a;border:1px solid #3b3f55;"
             "border-radius:12px;padding:14px;margin-top:8px;"
             "box-shadow:0 1px 0 rgba(255,255,255,0.02) inset,0 8px 24px rgba(0,0,0,0.25);'>"
             "<div style='font-size:11px;font-weight:700;text-transform:uppercase;"
-            "letter-spacing:0.12em;color:#a7a8b3;margin-bottom:8px;'>Driving Model (Encoder)</div>",
+            "letter-spacing:0.12em;color:#a7a8b3;margin-bottom:8px;'>Driving Model </div>"
+            f"<span style='font-size:13px;font-weight:600;color:#f4f4f7;'>{driving_label}</span>",
             unsafe_allow_html=True,
         )
-        st.markdown("<div style='height:12px;'></div>", unsafe_allow_html=True)
-        driving_label = st.radio(
-            "Driving model",
-            options=list(DRIVING_MODELS.keys()),
-            key="llm_narr__driving_label",
-            label_visibility="collapsed",
-        )
-        model_key = DRIVING_MODELS[driving_label]
-        st.markdown("</div>", unsafe_allow_html=True)
+        # Fixed model — no selector
+        
+       
 
         if model_key not in PLATFORM_MODELS:
             with content:
@@ -581,6 +629,20 @@ def render() -> None:
                 format_func=lambda k: LLM_MODELS[k]["display"],
                 key="llm_narr__llm_b",
             )
+
+        # Dynamic LLM evaluation metrics (updates with selected LLM)
+        has_eval_a = llm_key_a in LLM_EVAL_METRICS
+        has_eval_b = compare_mode and llm_key_b is not None and llm_key_b in LLM_EVAL_METRICS
+        if has_eval_a or has_eval_b:
+            st.markdown(
+                "<div style='font-size:11px;font-weight:700;text-transform:uppercase;"
+                "letter-spacing:0.12em;color:#a7a8b3;margin:14px 0 6px;'>LLM Evaluation</div>",
+                unsafe_allow_html=True,
+            )
+            if has_eval_a:
+                _render_llm_eval_card(llm_key_a)
+            if has_eval_b:
+                _render_llm_eval_card(llm_key_b)
 
     # ── Content column ────────────────────────────────────────────────────────
     with content:

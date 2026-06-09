@@ -394,6 +394,10 @@ def run_phase_1_reports(
                         "outcome": None,
                     }
 
+                    # Extract traffic light state for the current timestep
+                    from xai.run_xai_eval import extract_traffic_light_state
+                    tl_state = extract_traffic_light_state(current_transition.state)
+
                     report = report_builder.build(
                         step=step_count,
                         timestamp_s=step_count * 0.1,
@@ -407,6 +411,7 @@ def run_phase_1_reports(
                         necessity_score=necessity["necessity_score"],
                         attention_grounding=grounding,
                         decision_class=dec_class,
+                        traffic_light=tl_state,
                     )
                     _save_report(scenario_idx, dm_key, step_count, report)
                     scenario_report_count += 1

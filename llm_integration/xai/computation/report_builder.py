@@ -23,6 +23,7 @@ def build(
     necessity_score: float,
     attention_grounding: Dict[str, Any],
     decision_class: str,
+    traffic_light: Optional[Dict[str, Any]] = None,
 ) -> Dict[str, Any]:
     """
     Assemble a structured report from all computation-layer outputs.
@@ -40,6 +41,9 @@ def build(
         attention_grounding: ``{grounding_score, per_agent_breakdown}``
             from AttentionGrounder.
         decision_class: One of the four class labels.
+        traffic_light: Optional traffic light state dict with keys
+            ``state`` (red/yellow/green/none), ``distance_m``, and
+            ``raw_states``.
 
     Returns:
         Validated report dictionary.
@@ -82,6 +86,10 @@ def build(
         "attention_grounding": attention_grounding,
         "decision_class": decision_class,
     }
+
+    # Include traffic light state if available
+    if traffic_light is not None:
+        report["traffic_light"] = traffic_light
 
     return report
 
