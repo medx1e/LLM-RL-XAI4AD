@@ -381,7 +381,7 @@ def run_phase_1_reports(
                     config=pipeline_cfg,
                 )
 
-                if step_count % f_report == 0:
+                if step_count % f_report == 0 or step_count == 79 or step_count == 59:
                     true_action_arr = jax.device_get(rl_transition.action)
                     if true_action_arr.ndim > 1:
                         true_action_arr = true_action_arr[0]

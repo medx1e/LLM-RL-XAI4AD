@@ -545,7 +545,7 @@ def run_xai_eval(args):
             }
 
             report = None
-            if step_count > 0 and step_count % f_report == 0:
+            if step_count > 0 and (step_count % f_report == 0 or step_count == 79 or step_count == 59):
                 # Always recompute ego_state fresh from the *current* pre-step
                 # state so it matches the action the policy chose this step,
                 # even if the graph hasn't been rebuilt recently.
