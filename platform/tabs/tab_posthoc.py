@@ -447,24 +447,6 @@ def _render_evaluation_report(
                        "Attention and attribution often disagree — the model may attend to "
                        "features for reasons not captured by gradient-based methods.")
                 )
-        st.divider()
-
-    # ── 5. Faithfulness placeholder ────────────────────────────────────────────
-    st.subheader("Faithfulness — Deletion Curves")
-    col_info, col_expect = st.columns([2, 1])
-    with col_info:
-        st.info(
-            "Deletion curves require live model inference and have not been precomputed.\n\n"
-            "Run:\n```\npython scripts/precompute_faithfulness.py "
-            "--model womd_sac_road_perceiver_minimal_42 --scenario 0\n```"
-        )
-    with col_expect:
-        st.markdown(
-            "**What to expect**\n"
-            "- Steep early drop = high faithfulness\n"
-            "- AUC > 0.7 = method is trustworthy\n"
-            "- Random baseline AUC ≈ 0.5"
-        )
 
 
 # ---------------------------------------------------------------------------

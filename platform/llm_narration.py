@@ -588,10 +588,7 @@ def render() -> None:
             "Counterfactual alternatives", value=True, key="llm_narr__tc",
         )
         toggle_key = toggle_key_from_flags(toggle_grounding, toggle_counterfactual)
-        stream_effect = st.toggle(
-            "Streaming effect", value=True, key="llm_narr__stream",
-            help="Reveal narrations token-by-token, like live LLM streaming.",
-        )
+        stream_effect = True
 
         combos_available = set(available_narration_combos(scenario_idx, model_key))
         llm_options = [k for k in LLM_MODELS if (k, toggle_key) in combos_available]
@@ -671,28 +668,53 @@ def render() -> None:
             step = render_bev_player(artifact, key_prefix="llm_narr", height=450)
 
         narr_a = _ensure_narrations(scenario_idx, model_key, llm_key_a, toggle_key, num_steps)
+        narr_b = None
+        if compare_mode and llm_key_b is not None:
+            narr_b = _ensure_narrations(scenario_idx, model_key, llm_key_b, toggle_key, num_steps)
         reports = _ensure_reports(scenario_idx, model_key, num_steps)
 
         with col_stats:
             non_null_narr = len({n.timestep for n in narr_a if n is not None})
             non_null_rep  = len({r.get("step") for r in reports if r is not None})
-            seen_rt: dict[int, float] = {
-                n.timestep: n.response_time_s
+            
+            seen_rt_a = [
+                n.response_time_s * 1000
                 for n in narr_a
-                if n is not None and n.response_time_s is not None
-            }
-            avg_rt_ms = (sum(seen_rt.values()) / len(seen_rt) * 1000) if seen_rt else None
+                if n is not None and n.response_time_s is not None and n.response_time_s > 0
+            ]
+            avg_rt_ms_a = sum(seen_rt_a) / len(seen_rt_a) if seen_rt_a else None
+
             st.markdown(
                 "<div style='font-size:11px;font-weight:700;text-transform:uppercase;"
                 "letter-spacing:0.12em;color:#a7a8b3;margin:6px 0 8px;'>Quick stats</div>",
                 unsafe_allow_html=True,
             )
-            s1, s2 = st.columns(2)
-            s1.metric("Narrations", str(non_null_narr))
-            s2.metric("Reports",    str(non_null_rep))
-            s3, s4 = st.columns(2)
-            s3.metric("Avg latency", f"{avg_rt_ms:.0f} ms" if avg_rt_ms else "—")
-            s4.metric("Current t",   str(step))
+
+            if compare_mode and narr_b is not None:
+                seen_rt_b = [
+                    n.response_time_s * 1000
+                    for n in narr_b
+                    if n is not None and n.response_time_s is not None and n.response_time_s > 0
+                ]
+                avg_rt_ms_b = sum(seen_rt_b) / len(seen_rt_b) if seen_rt_b else None
+
+                s1, s2, s3 = st.columns(3)
+                s1.metric("Narrations", str(non_null_narr))
+                s2.metric("Reports",    str(non_null_rep))
+                s3.metric("Current t",   str(step))
+
+                s4, s5 = st.columns(2)
+                display_a = LLM_MODELS[llm_key_a]["display"]
+                display_b = LLM_MODELS[llm_key_b]["display"]
+                s4.metric(f"Avg latency ({display_a})", f"{avg_rt_ms_a:.0f} ms" if avg_rt_ms_a else "—")
+                s5.metric(f"Avg latency ({display_b})", f"{avg_rt_ms_b:.0f} ms" if avg_rt_ms_b else "—")
+            else:
+                s1, s2 = st.columns(2)
+                s1.metric("Narrations", str(non_null_narr))
+                s2.metric("Reports",    str(non_null_rep))
+                s3, s4 = st.columns(2)
+                s3.metric("Avg latency", f"{avg_rt_ms_a:.0f} ms" if avg_rt_ms_a else "—")
+                s4.metric("Current t",   str(step))
 
         # Narration cards (2-col on compare, 1-col otherwise)
         st.markdown(
@@ -709,7 +731,6 @@ def render() -> None:
         variant_a = _streaming_variant(slot_a, entry_a.timestep if entry_a else None)
 
         if compare_mode and llm_key_b is not None:
-            narr_b = _ensure_narrations(scenario_idx, model_key, llm_key_b, toggle_key, num_steps)
             entry_b = narr_b[step]
             slot_b = f"llm_narr__var__{model_key}__{scenario_idx}__{llm_key_b}"
             variant_b = _streaming_variant(slot_b, entry_b.timestep if entry_b else None)

@@ -77,7 +77,7 @@ def narrate(
             base_url,
             json=payload,
             headers=headers,
-            timeout=30
+            timeout=120
         )
         resp.raise_for_status()
 

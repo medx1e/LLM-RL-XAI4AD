@@ -75,9 +75,13 @@ DEMO_MODEL_KEYS = [
 DEMO_SCENARIOS = [1, 2, 3]
 
 DEMO_METHODS = [
+    "vanilla_gradient",
     "integrated_gradients",
-    "feature_ablation",
+    "smooth_grad",
     "gradient_x_input",
+    "perturbation",
+    "feature_ablation",
+    "sarfa",
 ]
 
 # ── Internal rollout helpers (mirror rollout_engine, but capture observations) ─

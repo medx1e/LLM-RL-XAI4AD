@@ -80,8 +80,9 @@ def render_frame(
     )
     obj_types = waymax_state.object_metadata.object_types
 
+    indices = np.arange(traj.num_objects)
     overrides.plot_trajectory(
-        ax, traj, is_controlled, obj_types, time_idx=t, indices=None
+        ax, traj, is_controlled, obj_types, time_idx=t, indices=indices
     )
 
     # ── 4. Center the view on the SDC ─────────────────────────────────
