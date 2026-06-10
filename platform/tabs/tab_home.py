@@ -30,14 +30,6 @@ _SVG_CHAT = (
     'stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'
     '<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>'
 )
-_SVG_CHART = (
-    '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" '
-    'stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'
-    '<line x1="18" y1="20" x2="18" y2="10"/>'
-    '<line x1="12" y1="20" x2="12" y2="4"/>'
-    '<line x1="6" y1="20" x2="6" y2="14"/></svg>'
-)
-
 # Accent palette harmonised with the indigo theme (was ColorBrewer Set1, which
 # clashed against the dark UI). Indigo → teal → sky → amber.
 _FEATURE_CARDS = [
@@ -64,14 +56,6 @@ _FEATURE_CARDS = [
         "title": "LLM Narration",
         "desc":  "Natural-language narrations of policy decisions across LLM × toggle combinations.",
         "tag":   "Open LLM Narration →",
-    },
-    {
-        "to":    "Evaluation",
-        "icon":  _SVG_CHART,
-        "color": "#f5a623",
-        "title": "Evaluation",
-        "desc":  "Method agreement, faithfulness, and attention–attribution alignment reports.",
-        "tag":   "Open Evaluation →",
     },
 ]
 
@@ -132,7 +116,7 @@ def render() -> None:
 
     # ── Feature cards (canonical entry points — real navigation) ───────────────
     st.markdown(section_badge("A", "Platform Features", large=True), unsafe_allow_html=True)
-    for col, card in zip(st.columns(4, gap="medium"), _FEATURE_CARDS):
+    for col, card in zip(st.columns(len(_FEATURE_CARDS), gap="medium"), _FEATURE_CARDS):
         with col:
             st.markdown(
                 feature_card(
@@ -175,7 +159,7 @@ def render() -> None:
             cards_per_row = min(3, len(scenario_rows))
             for row_start in range(0, len(scenario_rows), cards_per_row):
                 row_items = scenario_rows[row_start: row_start + cards_per_row]
-                cols = st.columns(cards_per_row)
+                cols = st.columns(cards_per_row, gap="medium")
                 for ci, (col, (key, entry, idx)) in enumerate(zip(cols, row_items)):
                     with col:
                         st.markdown(
@@ -189,15 +173,7 @@ def render() -> None:
                             ),
                             unsafe_allow_html=True,
                         )
-                        if st.button(
-                            "Open in Post-hoc XAI →",
-                            key=f"home_scen_{key}_{idx}",
-                            width="stretch",
-                        ):
-                            # Pre-seed the Post-hoc tab's selection widgets.
-                            st.session_state["posthoc__model_key"]    = key
-                            st.session_state["posthoc__scenario_idx"] = idx
-                            _navigate("Post-hoc XAI")
+                st.markdown("<div style='height:14px;'></div>", unsafe_allow_html=True)
 
     with col_md:
         st.markdown(section_badge("C", "Model Discovery", large=True), unsafe_allow_html=True)

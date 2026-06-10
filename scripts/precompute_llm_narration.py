@@ -49,13 +49,13 @@ _CBM_ROOT = _PROJECT_ROOT / "cbm"
 _POSTHOC_ROOT = _PROJECT_ROOT / "post-hoc-xai"
 _LLM_INTEGRATION_ROOT = _PROJECT_ROOT / "llm_integration"
 
-for _p in (
-    str(_PROJECT_ROOT),
-    str(_CBM_ROOT),
-    str(_POSTHOC_ROOT),
-    str(_CBM_ROOT / "V-Max"),
-    str(_LLM_INTEGRATION_ROOT),
-):
+_paths = [str(_PROJECT_ROOT), str(_CBM_ROOT), str(_POSTHOC_ROOT), str(_LLM_INTEGRATION_ROOT)]
+try:
+    import vmax as _vmax
+except ImportError:
+    _paths.append(str(_CBM_ROOT / "V-Max"))
+
+for _p in _paths:
     if _p not in sys.path:
         sys.path.insert(0, _p)
 

@@ -37,7 +37,7 @@ st.set_page_config(
 )
 
 import platform  # path bootstrap  # noqa: E402 (must run after set_page_config)
-from platform.tabs import tab_home, tab_posthoc, tab_cbm, tab_evaluation  # noqa: E402
+from platform.tabs import tab_home, tab_posthoc, tab_cbm  # noqa: E402
 from platform import llm_narration  # noqa: E402
 from platform.shared.theme import inject_theme  # noqa: E402
 from platform.shared.html_components import sidebar_brand  # noqa: E402
@@ -49,7 +49,6 @@ _TABS = {
     "Post-hoc XAI":  tab_posthoc,
     "CBM Explorer":  tab_cbm,
     "LLM Narration": llm_narration,
-    "Evaluation":    tab_evaluation,
 }
 
 _NAV_ICONS = {
@@ -57,7 +56,6 @@ _NAV_ICONS = {
     "Post-hoc XAI":  "visibility",
     "CBM Explorer":  "account_tree",
     "LLM Narration": "chat",
-    "Evaluation":    "bar_chart",
 }
 
 # Initialise nav state on first load

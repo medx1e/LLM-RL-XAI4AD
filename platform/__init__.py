@@ -27,8 +27,12 @@ def setup_paths() -> None:
     candidates = [
         str(_CBM_ROOT),
         str(_POSTHOC_ROOT),
-        str(_CBM_ROOT / "V-Max"),  # shared vmax package
     ]
+    try:
+        import vmax as _vmax
+    except ImportError:
+        candidates.append(str(_CBM_ROOT / "V-Max"))
+
     for p in candidates:
         if p not in sys.path:
             sys.path.insert(0, p)

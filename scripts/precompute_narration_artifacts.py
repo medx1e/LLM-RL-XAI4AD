@@ -56,7 +56,13 @@ _PROJECT_ROOT = _SCRIPT_DIR.parent
 _CBM_ROOT     = _PROJECT_ROOT / "cbm"
 _POSTHOC_ROOT = _PROJECT_ROOT / "post-hoc-xai"
 
-for _p in [str(_PROJECT_ROOT), str(_CBM_ROOT), str(_POSTHOC_ROOT), str(_CBM_ROOT / "V-Max")]:
+_paths = [str(_PROJECT_ROOT), str(_CBM_ROOT), str(_POSTHOC_ROOT)]
+try:
+    import vmax as _vmax
+except ImportError:
+    _paths.append(str(_CBM_ROOT / "V-Max"))
+
+for _p in _paths:
     if _p not in sys.path:
         sys.path.insert(0, _p)
 
