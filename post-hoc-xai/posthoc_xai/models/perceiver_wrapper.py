@@ -57,14 +57,18 @@ class PerceiverWrapper(ExplainableModel):
         obs = observation[None, :] if needs_batch else observation
 
         # Run with capture_intermediates for attention extraction.
-        # PolicyNetwork.__call__ returns (logits, attn_weights) — unpack both
-        # the tuple output and the mutated-state dict from `apply`.
-        (logits, _attn_weights), state = self._policy_module.apply(
+        # PolicyNetwork.__call__ may return (logits, attn_weights) or just
+        # logits depending on the vmax version — handle both gracefully.
+        raw_output, state = self._policy_module.apply(
             self._policy_params,
             obs,
             capture_intermediates=True,
             mutable=["intermediates"],
         )
+        if isinstance(raw_output, tuple):
+            logits, _attn_weights = raw_output
+        else:
+            logits = raw_output
 
         # Split logits → (mean, log_std) for NormalTanh
         action_mean = logits[..., : self._action_size]
@@ -106,8 +110,13 @@ class PerceiverWrapper(ExplainableModel):
         """
         # Add batch dim
         obs = observation[None, :]
-        # PolicyNetwork.__call__ returns (logits, attn_weights) — unpack.
-        logits, _attn_weights = self._policy_module.apply(self._policy_params, obs)
+        # PolicyNetwork.__call__ may return (logits, attn_weights) or just
+        # logits depending on the vmax version — handle both gracefully.
+        raw_output = self._policy_module.apply(self._policy_params, obs)
+        if isinstance(raw_output, tuple):
+            logits, _attn_weights = raw_output
+        else:
+            logits = raw_output
         action_mean = logits[0, : self._action_size]
 
         if action_idx is not None:

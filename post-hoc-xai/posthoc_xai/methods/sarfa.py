@@ -110,7 +110,11 @@ def sarfa_batch(
 
     def get_action_means(obs_batch: jnp.ndarray) -> jnp.ndarray:
         """(T, obs_dim) → (T, action_size).  No capture_intermediates."""
-        logits = module.apply(params, obs_batch)          # (T, 2*action_size)
+        raw_output = module.apply(params, obs_batch)          # may return (logits, attn_weights) or just logits
+        if isinstance(raw_output, tuple):
+            logits, _ = raw_output
+        else:
+            logits = raw_output
         return logits[:, :action_size]                    # (T, action_size)
 
     obs_batch        = jnp.array(raw_obs)                 # (T, obs_dim)
