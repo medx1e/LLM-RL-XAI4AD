@@ -196,7 +196,7 @@ class SARFA(AttributionMethod):
         baseline_output  = self.model.forward(observation)
         baseline_actions = baseline_output.action_mean     # (action_size,)
 
-        flat_obs    = observation.flatten()
+        flat_obs    = jnp.array(observation).flatten()
         attribution = jnp.zeros_like(flat_obs)
 
         for _cat, (start, end) in self.model.observation_structure.items():

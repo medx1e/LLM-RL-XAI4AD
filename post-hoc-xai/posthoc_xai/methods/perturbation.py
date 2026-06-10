@@ -58,7 +58,7 @@ class PerturbationAttribution(AttributionMethod):
         target_action: Optional[int] = None,
     ) -> jnp.ndarray:
         baseline_val = self.model.get_action_value(observation, target_action)
-        flat_obs = observation.flatten()
+        flat_obs = jnp.array(observation).flatten()
         attribution = jnp.zeros_like(flat_obs)
 
         if self.per_category:
