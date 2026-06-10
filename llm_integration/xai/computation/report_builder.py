@@ -42,8 +42,7 @@ def build(
             from AttentionGrounder.
         decision_class: One of the four class labels.
         traffic_light: Optional traffic light state dict with keys
-            ``state`` (red/yellow/green/none), ``distance_m``, and
-            ``raw_states``.
+            ``state`` (red/yellow/green/none) and ``distance_m``.
 
     Returns:
         Validated report dictionary.
@@ -79,17 +78,19 @@ def build(
         "timestamp_s": round(timestamp_s, 2),
         "ego_state": ego_state,
         "chosen_action": chosen_action,
-        "context_categories": context_categories,
+    }
+
+    if traffic_light is not None:
+        report["traffic_light"] = traffic_light
+
+    report.update({
         "scene_description": scene_description,
+        "context_categories": context_categories,
         "alternatives": alternatives,
         "necessity_score": round(necessity_score, 4),
         "attention_grounding": attention_grounding,
         "decision_class": decision_class,
-    }
-
-    # Include traffic light state if available
-    if traffic_light is not None:
-        report["traffic_light"] = traffic_light
+    })
 
     return report
 

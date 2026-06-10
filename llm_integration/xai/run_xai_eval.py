@@ -169,9 +169,8 @@ def extract_traffic_light_state(state) -> Dict[str, Any]:
     label together with its distance to the ego.
 
     Returns:
-        A dict with keys ``state`` (str: red/yellow/green/none),
-        ``distance_m`` (float or None), and ``raw_states`` (list of str)
-        summarising all valid TL states in the scene.
+        A dict with keys ``state`` (str: red/yellow/green/none) and
+        ``distance_m`` (float or None) summarising the nearest valid TL state.
     """
     try:
         idx = int(np.array(jax.device_get(state.timestep))[0])
@@ -212,7 +211,7 @@ def extract_traffic_light_state(state) -> Dict[str, Any]:
             ego_y = float(ego_y_raw[ego_idx, idx])
 
         if not np.any(tl_valid):
-            return {"state": "none", "distance_m": None, "raw_states": []}
+            return {"state": "none", "distance_m": None}
 
         # Compute distances to ego for valid TLs
         dists = np.sqrt((tl_xy[:, 0] - ego_x)**2 + (tl_xy[:, 1] - ego_y)**2)
@@ -223,20 +222,12 @@ def extract_traffic_light_state(state) -> Dict[str, Any]:
         nearest_dist = float(dists[nearest_idx])
         label = _TL_STATE_LABELS.get(nearest_state, "unknown")
 
-        # Collect all valid TL states for context
-        raw_labels = [
-            _TL_STATE_LABELS.get(int(tl_states_raw[i]), "unknown")
-            for i in range(len(tl_states_raw))
-            if tl_valid[i]
-        ]
-
         return {
             "state": label,
             "distance_m": round(nearest_dist, 1),
-            "raw_states": raw_labels,
         }
     except Exception:
-        return {"state": "unknown", "distance_m": None, "raw_states": []}
+        return {"state": "unknown", "distance_m": None}
 
 
 def state_to_dict(state) -> Dict[str, Any]:
